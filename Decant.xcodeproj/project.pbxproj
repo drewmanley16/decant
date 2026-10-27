@@ -55,6 +55,7 @@
 		C042775CBD09AEA14B10FE30 /* CellarSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB903EA80EA3BD5E4807C7C /* CellarSheets.swift */; };
 		C505AA25ACDBDD1FA6A53D89 /* LabelArtRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D104B1585AD890E582EE1F3 /* LabelArtRenderer.swift */; };
 		CAE90B19D24F3C532E6AD6E2 /* LocalBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E40BCE83002A25CB3ECF47 /* LocalBackendTests.swift */; };
+		CB1664B78B113DC3584B23D0 /* SupabaseDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */; };
 		CFBB458CF616F1AC14717663 /* CellarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE60931083334C0B1D2F9F40 /* CellarView.swift */; };
 		D182EB99B22DD08DD3BF5533 /* LocalSampleCommunity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B90094C4C26D3CCF466D458 /* LocalSampleCommunity.swift */; };
 		D2EBE73A3444A2B20F381C10 /* Cellar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9636063E58C91E40902935A /* Cellar.swift */; };
@@ -110,6 +111,7 @@
 		716DB44A7BC2587A688C5135 /* SeedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedCatalog.swift; sourceTree = "<group>"; };
 		72AF9C3019A3EB8620690C2C /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
 		8C293C7C0C6A8FC34F458BE7 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
+		9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDecodingTests.swift; sourceTree = "<group>"; };
 		96D3BAF20C6F7BED737FB96D /* SafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyTests.swift; sourceTree = "<group>"; };
 		9A33E96DA79AD0C047633C7B /* RateWineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateWineView.swift; sourceTree = "<group>"; };
 		9D373683D092A38EF86A4542 /* Decant.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Decant.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -295,6 +297,7 @@
 				C8E40BCE83002A25CB3ECF47 /* LocalBackendTests.swift */,
 				A0A91FC0C99730C95C6290A5 /* LogicTests.swift */,
 				96D3BAF20C6F7BED737FB96D /* SafetyTests.swift */,
+				9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */,
 			);
 			path = DecantTests;
 			sourceTree = "<group>";
@@ -623,6 +626,7 @@
 				CAE90B19D24F3C532E6AD6E2 /* LocalBackendTests.swift in Sources */,
 				197D57B4D70DD6D6E3478D35 /* LogicTests.swift in Sources */,
 				066CF68604BAA6E320B69B68 /* SafetyTests.swift in Sources */,
+				CB1664B78B113DC3584B23D0 /* SupabaseDecodingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -672,7 +676,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = X9H68STU8F;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -805,7 +809,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = X9H68STU8F;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

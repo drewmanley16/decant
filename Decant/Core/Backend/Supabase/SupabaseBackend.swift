@@ -273,8 +273,8 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
 
         let wines = try await winesTask
         let profiles = try await profilesTask
-        let reviews = Dictionary(try decode([ReviewRow].self, try await reviewsData).map { ($0.entryId, $0.body) }, uniquingKeysWith: { a, _ in a })
-        let notes = Dictionary(try decode([PrivateNoteRow].self, try await notesData).map { ($0.entryId, $0.notes) }, uniquingKeysWith: { a, _ in a })
+        let reviews = Dictionary(try decode([ReviewRead].self, try await reviewsData).map { ($0.entryId, $0.body) }, uniquingKeysWith: { a, _ in a })
+        let notes = Dictionary(try decode([PrivateNoteRead].self, try await notesData).map { ($0.entryId, $0.notes) }, uniquingKeysWith: { a, _ in a })
         let stats = Dictionary(try decode([EntryStatsRow].self, try await statsData).map { ($0.entryId, $0) }, uniquingKeysWith: { a, _ in a })
 
         return rows.compactMap { row in
@@ -359,7 +359,7 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         try await run {
             let reviewed = try await client.from("wine_reviews").select("entry_id,user_id,body")
                 .order("created_at", ascending: false).limit(200).execute().data
-            let reviewIDs = Set(try decode([ReviewRow].self, reviewed).map(\.entryId))
+            let reviewIDs = Set(try decode([ReviewRead].self, reviewed).map(\.entryId))
             let data = try await client.from("tasting_entries").select(Self.entryColumns)
                 .eq("vintage_id", value: wineID.uuidString).order("created_at", ascending: false).limit(limit * 3).execute().data
             let rows = try decode([TastingRow].self, data).filter { reviewIDs.contains($0.id) }

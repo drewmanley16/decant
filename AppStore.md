@@ -120,6 +120,10 @@ Account deletion: Profile → Settings → Delete account.
 The demo account below already has tastings and cellar bottles.
 ```
 
+**Demo account** (Sign-In Information):
+- Username: `drewmanley16+appreview@gmail.com`
+- Password: kept out of this public repo. It was given to Drew directly; store it in a password manager.
+
 ## Moderation runbook (needed to keep the 24-hour promise)
 Supabase dashboard → SQL Editor:
 ```sql

@@ -173,7 +173,22 @@ struct TastingInsert: Encodable {
     }
 }
 
-struct ReviewRow: Codable {
+/// Read shape for `wine_reviews` (decoded with snake_case conversion).
+struct ReviewRead: Decodable {
+    var entryId: UUID
+    var userId: UUID
+    var body: String
+}
+
+/// Read shape for `tasting_private_notes`.
+struct PrivateNoteRead: Decodable {
+    var entryId: UUID
+    var userId: UUID
+    var notes: String
+}
+
+/// Write shape for `wine_reviews` (explicit snake_case keys for encoding).
+struct ReviewRow: Encodable {
     var entryId: UUID
     var userId: UUID
     var body: String
@@ -184,7 +199,7 @@ struct ReviewRow: Codable {
     }
 }
 
-struct PrivateNoteRow: Codable {
+struct PrivateNoteRow: Encodable {
     var entryId: UUID
     var userId: UUID
     var notes: String
