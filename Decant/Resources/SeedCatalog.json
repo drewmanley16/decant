@@ -1,0 +1,1496 @@
+{
+ "wineries": [
+  {
+   "name": "Château Margaux",
+   "country": "France",
+   "region": "Bordeaux",
+   "founded": null,
+   "story": "One of the four original First Growths named in the 1855 Bordeaux Classification, set in the Margaux appellation on the Left Bank of the Gironde.",
+   "practices": [
+    "Estate-grown fruit",
+    "Barrel aging in new French oak"
+   ],
+   "highlights": [
+    "Premier Grand Cru Classé (1855)"
+   ],
+   "id": "f7bc1d26-2c98-5f3a-972a-7503513b6c07"
+  },
+  {
+   "name": "Opus One Winery",
+   "country": "USA",
+   "region": "Napa Valley",
+   "founded": 1979,
+   "story": "Founded as a joint venture between Baron Philippe de Rothschild and Robert Mondavi to make a single Bordeaux-style blend in Oakville.",
+   "practices": [
+    "Single blended wine each vintage"
+   ],
+   "highlights": [
+    "Franco-American partnership"
+   ],
+   "id": "e014e2e5-75b6-591b-9f77-7c2484e83b10"
+  },
+  {
+   "name": "Cloudy Bay",
+   "country": "New Zealand",
+   "region": "Marlborough",
+   "founded": 1985,
+   "story": "Established in Marlborough in 1985; its Sauvignon Blanc helped bring New Zealand wine to international attention.",
+   "practices": [
+    "Cool-climate viticulture"
+   ],
+   "highlights": [
+    "Early Marlborough pioneer"
+   ],
+   "id": "981e7b68-8308-5106-a5f7-fd9676cd9008"
+  },
+  {
+   "name": "Château d'Esclans",
+   "country": "France",
+   "region": "Provence",
+   "founded": null,
+   "story": "A Provence estate acquired by Sacha Lichine in 2006, focused entirely on rosé.",
+   "practices": [
+    "Rosé specialist"
+   ],
+   "highlights": [
+    "Whispering Angel"
+   ],
+   "id": "2ba4d78a-ef02-525f-900a-4664c5182505"
+  },
+  {
+   "name": "Moët & Chandon",
+   "country": "France",
+   "region": "Champagne",
+   "founded": 1743,
+   "story": "Founded in Épernay in 1743, Moët & Chandon is one of the largest Champagne houses and the producer of Dom Pérignon.",
+   "practices": [
+    "Traditional method",
+    "Multi-vintage blending"
+   ],
+   "highlights": [
+    "Founded 1743",
+    "Home of Dom Pérignon"
+   ],
+   "id": "74de36c8-a5af-5373-afcd-9d780ef2cb60"
+  },
+  {
+   "name": "Marchesi Antinori",
+   "country": "Italy",
+   "region": "Tuscany",
+   "founded": 1385,
+   "story": "The Antinori family has made wine in Florence since 1385. Tignanello, first released in the 1970s, was a pioneering 'Super Tuscan'.",
+   "practices": [
+    "Sangiovese aged in barrique"
+   ],
+   "highlights": [
+    "26 generations of winemaking"
+   ],
+   "id": "dc8fb2ab-5691-569f-bdc1-c614676c2db2"
+  },
+  {
+   "name": "Tenuta San Guido",
+   "country": "Italy",
+   "region": "Tuscany",
+   "founded": null,
+   "story": "Home of Sassicaia, created by Marchese Mario Incisa della Rocchetta in Bolgheri; the first commercial vintage was 1968.",
+   "practices": [
+    "Bordeaux varieties on the Tuscan coast"
+   ],
+   "highlights": [
+    "Bolgheri Sassicaia has its own DOC"
+   ],
+   "id": "1bf068df-550c-5327-9420-66b7b06a8d1d"
+  },
+  {
+   "name": "Penfolds",
+   "country": "Australia",
+   "region": "South Australia",
+   "founded": 1844,
+   "story": "Founded in 1844 near Adelaide by Dr Christopher Rawson Penfold. Grange was created by winemaker Max Schubert, with 1951 as the first experimental vintage.",
+   "practices": [
+    "Multi-regional blending",
+    "American oak aging for Grange"
+   ],
+   "highlights": [
+    "Grange first made in 1951"
+   ],
+   "id": "85f9b4f6-c506-5336-9c67-672ac4f3dcfb"
+  },
+  {
+   "name": "Catena Zapata",
+   "country": "Argentina",
+   "region": "Mendoza",
+   "founded": 1902,
+   "story": "Founded by Italian immigrant Nicola Catena in 1902. Nicolás Catena Zapata later pioneered high-altitude Malbec in Mendoza.",
+   "practices": [
+    "High-altitude vineyards"
+   ],
+   "highlights": [
+    "High-altitude Malbec research"
+   ],
+   "id": "d049dca8-d8cc-5260-8786-75f0fe4307bc"
+  },
+  {
+   "name": "Kim Crawford",
+   "country": "New Zealand",
+   "region": "Marlborough",
+   "founded": 1996,
+   "story": "Started in 1996 by winemaker Kim Crawford, focusing on vibrant Marlborough Sauvignon Blanc.",
+   "practices": [
+    "Stainless steel fermentation"
+   ],
+   "highlights": [],
+   "id": "04b45dc1-cf8d-512c-b814-5dba5b7abe2c"
+  },
+  {
+   "name": "Château d'Yquem",
+   "country": "France",
+   "region": "Bordeaux",
+   "founded": null,
+   "story": "The only Sauternes estate ranked Premier Cru Supérieur in the 1855 Classification, famous for botrytised sweet wines.",
+   "practices": [
+    "Hand harvest in successive passes (tries)"
+   ],
+   "highlights": [
+    "Premier Cru Supérieur (1855)"
+   ],
+   "id": "f4bb3b44-9ad0-52cd-bcf5-63be67b4ad50"
+  },
+  {
+   "name": "Pio Cesare",
+   "country": "Italy",
+   "region": "Piedmont",
+   "founded": 1881,
+   "story": "A family winery in Alba since 1881, making Barolo and Barbaresco from Nebbiolo.",
+   "practices": [
+    "Traditional Nebbiolo blending across crus"
+   ],
+   "highlights": [
+    "Founded 1881 in Alba"
+   ],
+   "id": "7b2bd7cb-caac-5273-a46d-00076e266e0a"
+  },
+  {
+   "name": "Vega Sicilia",
+   "country": "Spain",
+   "region": "Ribera del Duero",
+   "founded": 1864,
+   "story": "Founded in 1864, Vega Sicilia is one of Spain's most celebrated estates; Único is released only after long aging.",
+   "practices": [
+    "Extended barrel and bottle aging"
+   ],
+   "highlights": [
+    "Founded 1864"
+   ],
+   "id": "0f582dc0-642f-50fc-9e64-2c0ec75f535c"
+  },
+  {
+   "name": "Marqués de Riscal",
+   "country": "Spain",
+   "region": "Rioja",
+   "founded": 1858,
+   "story": "One of Rioja's historic bodegas, founded in Elciego in 1858.",
+   "practices": [
+    "Tempranillo aged in oak"
+   ],
+   "highlights": [
+    "Founded 1858"
+   ],
+   "id": "5326332a-7506-5ef1-b8b7-1f71a8605575"
+  },
+  {
+   "name": "Dr. Loosen",
+   "country": "Germany",
+   "region": "Mosel",
+   "founded": null,
+   "story": "A family estate in the Mosel run by Ernst Loosen, known for Riesling from steep slate vineyards.",
+   "practices": [
+    "Steep-slope slate vineyards"
+   ],
+   "highlights": [],
+   "id": "00537794-2199-52aa-845c-20591799f0c6"
+  },
+  {
+   "name": "Maison Louis Jadot",
+   "country": "France",
+   "region": "Burgundy",
+   "founded": 1859,
+   "story": "A Beaune-based Burgundy house founded in 1859.",
+   "practices": [
+    "Négociant and domaine wines"
+   ],
+   "highlights": [
+    "Founded 1859"
+   ],
+   "id": "ac5183a0-1f04-5262-9347-43e34b5bc276"
+  },
+  {
+   "name": "Domaine Leflaive",
+   "country": "France",
+   "region": "Burgundy",
+   "founded": null,
+   "story": "A benchmark Puligny-Montrachet domaine and an early adopter of biodynamic farming in Burgundy.",
+   "practices": [
+    "Biodynamic viticulture"
+   ],
+   "highlights": [],
+   "id": "679c6d83-b55c-5ff3-9350-e01df0b29e56"
+  },
+  {
+   "name": "Ridge Vineyards",
+   "country": "USA",
+   "region": "Santa Cruz Mountains",
+   "founded": null,
+   "story": "Ridge's Monte Bello Cabernet was among the California wines in the 1976 Judgment of Paris tasting.",
+   "practices": [
+    "Ingredient labeling",
+    "Native yeast fermentations"
+   ],
+   "highlights": [
+    "1976 Judgment of Paris"
+   ],
+   "id": "17a81a94-dfae-5aff-8f15-9d67f212b5d7"
+  },
+  {
+   "name": "Caymus Vineyards",
+   "country": "USA",
+   "region": "Napa Valley",
+   "founded": 1972,
+   "story": "Founded by the Wagner family in Rutherford in 1972.",
+   "practices": [
+    "Ripe, plush Napa Cabernet style"
+   ],
+   "highlights": [],
+   "id": "fcbb6888-a8ea-5058-b402-8250493bc0f9"
+  },
+  {
+   "name": "Taylor's (Taylor Fladgate)",
+   "country": "Portugal",
+   "region": "Douro",
+   "founded": 1692,
+   "story": "One of the oldest Port houses, founded in 1692.",
+   "practices": [
+    "Aged tawny Port blending"
+   ],
+   "highlights": [
+    "Founded 1692"
+   ],
+   "id": "fdf793ea-fc86-5c36-ada2-0138fb9e6457"
+  },
+  {
+   "name": "Veuve Clicquot",
+   "country": "France",
+   "region": "Champagne",
+   "founded": 1772,
+   "story": "Founded in Reims in 1772 and shaped by Barbe-Nicole Ponsardin, the widow (veuve) Clicquot, who developed riddling.",
+   "practices": [
+    "Pinot Noir-led blends"
+   ],
+   "highlights": [
+    "Founded 1772"
+   ],
+   "id": "2c8ecccd-f9ca-5505-a0ee-5e1d420b9cd9"
+  },
+  {
+   "name": "Meiomi",
+   "country": "USA",
+   "region": "California",
+   "founded": 2006,
+   "story": "Created by Joe Wagner in 2006 as a coastal California Pinot Noir blend.",
+   "practices": [
+    "Multi-county coastal blending"
+   ],
+   "highlights": [],
+   "id": "fe1176b0-93bd-56a4-97a8-f06916d6d6b7"
+  },
+  {
+   "name": "La Crema",
+   "country": "USA",
+   "region": "Sonoma Coast",
+   "founded": 1979,
+   "story": "A Sonoma County winery founded in 1979, focused on cool-climate Chardonnay and Pinot Noir.",
+   "practices": [
+    "Cool-climate sites"
+   ],
+   "highlights": [],
+   "id": "87665151-2a93-534a-8b8e-b34f987d3999"
+  },
+  {
+   "name": "Santa Margherita",
+   "country": "Italy",
+   "region": "Trentino-Alto Adige",
+   "founded": 1935,
+   "story": "Founded in 1935; in 1961 it was among the first to vinify Pinot Grigio as a white wine.",
+   "practices": [
+    "Pinot Grigio specialist"
+   ],
+   "highlights": [
+    "Pinot Grigio pioneer (1961)"
+   ],
+   "id": "9153789b-6289-563f-a79a-968fc824a9f8"
+  },
+  {
+   "name": "Gravner",
+   "country": "Italy",
+   "region": "Friuli-Venezia Giulia",
+   "founded": null,
+   "story": "Josko Gravner's estate in Oslavia is known for skin-contact white wines fermented in buried clay amphorae.",
+   "practices": [
+    "Amphora fermentation",
+    "Extended skin contact"
+   ],
+   "highlights": [
+    "Orange wine pioneer"
+   ],
+   "id": "7754a8a7-e6f5-57f8-9f05-d29da00abd16"
+  }
+ ],
+ "wines": [
+  {
+   "id": "99c497ef-9d41-5613-a389-73e3fc363bd3",
+   "productID": "5153de9e-29cb-5e55-b952-ab186f7905e0",
+   "wineryID": "f7bc1d26-2c98-5f3a-972a-7503513b6c07",
+   "name": "Château Margaux",
+   "type": "red",
+   "country": "France",
+   "region": "Bordeaux",
+   "appellation": "Margaux",
+   "grapes": [
+    "Cabernet Sauvignon",
+    "Merlot",
+    "Cabernet Franc",
+    "Petit Verdot"
+   ],
+   "year": 2015,
+   "price": 750,
+   "drinkFrom": 2030,
+   "drinkUntil": 2065,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.65,
+    "body": 0.85,
+    "tannin": 0.8,
+    "fruitiness": 0.65,
+    "flavors": [
+     "Blackcurrant",
+     "Violet",
+     "Cedar",
+     "Graphite"
+    ],
+    "notes": "Perfumed and structured, with dark fruit and fine-grained tannins.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 90,
+    "aging": 40
+   },
+   "pairings": [
+    "Roast lamb",
+    "Beef Wellington",
+    "Aged hard cheeses"
+   ]
+  },
+  {
+   "id": "54ad00dc-415a-54d5-a0f8-dfcbe69d86e1",
+   "productID": "5153de9e-29cb-5e55-b952-ab186f7905e0",
+   "wineryID": "f7bc1d26-2c98-5f3a-972a-7503513b6c07",
+   "name": "Château Margaux",
+   "type": "red",
+   "country": "France",
+   "region": "Bordeaux",
+   "appellation": "Margaux",
+   "grapes": [
+    "Cabernet Sauvignon",
+    "Merlot",
+    "Cabernet Franc",
+    "Petit Verdot"
+   ],
+   "year": 2010,
+   "price": 800,
+   "drinkFrom": 2025,
+   "drinkUntil": 2060,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.65,
+    "body": 0.85,
+    "tannin": 0.8,
+    "fruitiness": 0.65,
+    "flavors": [
+     "Blackcurrant",
+     "Violet",
+     "Cedar",
+     "Graphite"
+    ],
+    "notes": "Perfumed and structured, with dark fruit and fine-grained tannins.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 90,
+    "aging": 40
+   },
+   "pairings": [
+    "Roast lamb",
+    "Beef Wellington",
+    "Aged hard cheeses"
+   ]
+  },
+  {
+   "id": "96de1713-2bd8-52bc-98f1-52a28ebec4d9",
+   "productID": "e0d3c4e6-a3ca-5cdc-bd3b-d6f02dbf9d0f",
+   "wineryID": "e014e2e5-75b6-591b-9f77-7c2484e83b10",
+   "name": "Opus One",
+   "type": "red",
+   "country": "USA",
+   "region": "Napa Valley",
+   "appellation": "Oakville",
+   "grapes": [
+    "Cabernet Sauvignon",
+    "Merlot",
+    "Cabernet Franc",
+    "Petit Verdot",
+    "Malbec"
+   ],
+   "year": 2019,
+   "price": 420,
+   "drinkFrom": 2026,
+   "drinkUntil": 2045,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.55,
+    "body": 0.9,
+    "tannin": 0.75,
+    "fruitiness": 0.8,
+    "flavors": [
+     "Black cherry",
+     "Cassis",
+     "Mocha",
+     "Tobacco"
+    ],
+    "notes": "Rich and polished with ripe dark fruit and toasty oak.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 60,
+    "aging": 25
+   },
+   "pairings": [
+    "Ribeye steak",
+    "Braised short rib",
+    "Mushroom risotto"
+   ]
+  },
+  {
+   "id": "99ddc1c2-0302-5367-8bff-b6e5a531c185",
+   "productID": "d3e48dc2-6e82-5ecc-8bda-c0df96d5ae31",
+   "wineryID": "981e7b68-8308-5106-a5f7-fd9676cd9008",
+   "name": "Cloudy Bay Sauvignon Blanc",
+   "type": "white",
+   "country": "New Zealand",
+   "region": "Marlborough",
+   "appellation": null,
+   "grapes": [
+    "Sauvignon Blanc"
+   ],
+   "year": 2023,
+   "price": 32,
+   "drinkFrom": 2024,
+   "drinkUntil": 2026,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.85,
+    "body": 0.4,
+    "tannin": 0,
+    "fruitiness": 0.85,
+    "flavors": [
+     "Passion fruit",
+     "Lime",
+     "Cut grass"
+    ],
+    "notes": "Zesty and aromatic with tropical and citrus fruit.",
+    "serve": [
+     7,
+     10
+    ],
+    "decant": 0,
+    "aging": 3
+   },
+   "pairings": [
+    "Goat cheese",
+    "Oysters",
+    "Thai green curry"
+   ]
+  },
+  {
+   "id": "07f41388-a0e0-5b88-94fa-963953bc9cdf",
+   "productID": "0a4a1191-5df7-58a6-96a9-79e9a74f4132",
+   "wineryID": "2ba4d78a-ef02-525f-900a-4664c5182505",
+   "name": "Whispering Angel",
+   "type": "rose",
+   "country": "France",
+   "region": "Provence",
+   "appellation": "Côtes de Provence",
+   "grapes": [
+    "Grenache",
+    "Cinsault",
+    "Rolle"
+   ],
+   "year": 2023,
+   "price": 23,
+   "drinkFrom": 2024,
+   "drinkUntil": 2025,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.65,
+    "body": 0.35,
+    "tannin": 0.05,
+    "fruitiness": 0.7,
+    "flavors": [
+     "Strawberry",
+     "Peach",
+     "White flowers"
+    ],
+    "notes": "Pale, dry and delicate with red berry fruit.",
+    "serve": [
+     8,
+     10
+    ],
+    "decant": 0,
+    "aging": 2
+   },
+   "pairings": [
+    "Salade niçoise",
+    "Grilled shrimp",
+    "Charcuterie"
+   ]
+  },
+  {
+   "id": "b630fc68-038f-5ada-a5b7-1ca243606831",
+   "productID": "c04fad72-578d-5079-9c8e-f7d13541ec84",
+   "wineryID": "74de36c8-a5af-5373-afcd-9d780ef2cb60",
+   "name": "Moët Impérial Brut",
+   "type": "sparkling",
+   "country": "France",
+   "region": "Champagne",
+   "appellation": "Champagne",
+   "grapes": [
+    "Pinot Noir",
+    "Pinot Meunier",
+    "Chardonnay"
+   ],
+   "year": null,
+   "price": 55,
+   "drinkFrom": null,
+   "drinkUntil": null,
+   "profile": {
+    "sweetness": 0.2,
+    "acidity": 0.75,
+    "body": 0.45,
+    "tannin": 0,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Green apple",
+     "Brioche",
+     "Citrus"
+    ],
+    "notes": "Bright and fresh with orchard fruit and gentle toast.",
+    "serve": [
+     6,
+     9
+    ],
+    "decant": 0,
+    "aging": 3
+   },
+   "pairings": [
+    "Oysters",
+    "Fried chicken",
+    "Sushi"
+   ]
+  },
+  {
+   "id": "e3584617-3f6d-5230-b961-95ed66346ac4",
+   "productID": "f95ff77a-ffc0-5f61-89e4-6f5aaaf27946",
+   "wineryID": "74de36c8-a5af-5373-afcd-9d780ef2cb60",
+   "name": "Dom Pérignon",
+   "type": "sparkling",
+   "country": "France",
+   "region": "Champagne",
+   "appellation": "Champagne",
+   "grapes": [
+    "Chardonnay",
+    "Pinot Noir"
+   ],
+   "year": 2013,
+   "price": 260,
+   "drinkFrom": 2024,
+   "drinkUntil": 2040,
+   "profile": {
+    "sweetness": 0.15,
+    "acidity": 0.8,
+    "body": 0.6,
+    "tannin": 0,
+    "fruitiness": 0.55,
+    "flavors": [
+     "Toasted almond",
+     "Citrus peel",
+     "Smoke"
+    ],
+    "notes": "Precise and layered with toasty complexity.",
+    "serve": [
+     8,
+     10
+    ],
+    "decant": 0,
+    "aging": 20
+   },
+   "pairings": [
+    "Caviar",
+    "Lobster",
+    "Parmesan"
+   ]
+  },
+  {
+   "id": "6f93abe8-23a1-594e-9156-ebd90c322af5",
+   "productID": "8ab63214-1762-504f-a2e7-2fbebd8bed1c",
+   "wineryID": "dc8fb2ab-5691-569f-bdc1-c614676c2db2",
+   "name": "Tignanello",
+   "type": "red",
+   "country": "Italy",
+   "region": "Tuscany",
+   "appellation": "Toscana IGT",
+   "grapes": [
+    "Sangiovese",
+    "Cabernet Sauvignon",
+    "Cabernet Franc"
+   ],
+   "year": 2020,
+   "price": 145,
+   "drinkFrom": 2025,
+   "drinkUntil": 2040,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.75,
+    "body": 0.75,
+    "tannin": 0.7,
+    "fruitiness": 0.7,
+    "flavors": [
+     "Cherry",
+     "Plum",
+     "Spice",
+     "Leather"
+    ],
+    "notes": "Sangiovese brightness framed by Bordeaux varieties.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 60,
+    "aging": 20
+   },
+   "pairings": [
+    "Bistecca alla fiorentina",
+    "Pappardelle al ragù",
+    "Pecorino"
+   ]
+  },
+  {
+   "id": "34e922c9-9ae5-59e9-9ddb-5d7f6da8a531",
+   "productID": "cb5245ba-3065-5375-b466-01152dc81a04",
+   "wineryID": "1bf068df-550c-5327-9420-66b7b06a8d1d",
+   "name": "Sassicaia",
+   "type": "red",
+   "country": "Italy",
+   "region": "Tuscany",
+   "appellation": "Bolgheri Sassicaia",
+   "grapes": [
+    "Cabernet Sauvignon",
+    "Cabernet Franc"
+   ],
+   "year": 2019,
+   "price": 320,
+   "drinkFrom": 2027,
+   "drinkUntil": 2050,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.7,
+    "body": 0.8,
+    "tannin": 0.75,
+    "fruitiness": 0.65,
+    "flavors": [
+     "Blackberry",
+     "Mediterranean herbs",
+     "Cedar"
+    ],
+    "notes": "Elegant and savory with fresh acidity and long aging potential.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 90,
+    "aging": 30
+   },
+   "pairings": [
+    "Rack of lamb",
+    "Wild boar",
+    "Truffle dishes"
+   ]
+  },
+  {
+   "id": "51166515-9376-55a2-9647-f2bd2a4b6326",
+   "productID": "fb59219a-1a4b-5caa-a851-1e2f1ffd47ba",
+   "wineryID": "85f9b4f6-c506-5336-9c67-672ac4f3dcfb",
+   "name": "Penfolds Grange",
+   "type": "red",
+   "country": "Australia",
+   "region": "South Australia",
+   "appellation": null,
+   "grapes": [
+    "Shiraz",
+    "Cabernet Sauvignon"
+   ],
+   "year": 2018,
+   "price": 850,
+   "drinkFrom": 2028,
+   "drinkUntil": 2065,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.55,
+    "body": 0.95,
+    "tannin": 0.85,
+    "fruitiness": 0.85,
+    "flavors": [
+     "Blackberry",
+     "Licorice",
+     "Mocha",
+     "Pepper"
+    ],
+    "notes": "Powerful and concentrated, built for decades in the cellar.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 120,
+    "aging": 40
+   },
+   "pairings": [
+    "Barbecued beef",
+    "Venison",
+    "Aged cheddar"
+   ]
+  },
+  {
+   "id": "fc364374-02d6-5682-8426-1b903d7ade93",
+   "productID": "39507ae7-414a-5681-add8-c2bf9e194899",
+   "wineryID": "d049dca8-d8cc-5260-8786-75f0fe4307bc",
+   "name": "Catena Malbec",
+   "type": "red",
+   "country": "Argentina",
+   "region": "Mendoza",
+   "appellation": null,
+   "grapes": [
+    "Malbec"
+   ],
+   "year": 2021,
+   "price": 22,
+   "drinkFrom": 2023,
+   "drinkUntil": 2028,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.55,
+    "body": 0.7,
+    "tannin": 0.55,
+    "fruitiness": 0.8,
+    "flavors": [
+     "Blackberry",
+     "Violet",
+     "Vanilla"
+    ],
+    "notes": "Juicy dark fruit with floral lift.",
+    "serve": [
+     15,
+     17
+    ],
+    "decant": 20,
+    "aging": 6
+   },
+   "pairings": [
+    "Grilled steak",
+    "Empanadas",
+    "Chimichurri"
+   ]
+  },
+  {
+   "id": "1b45cc52-3a47-5256-8d80-a268a760bc12",
+   "productID": "08c8df6d-0f54-58a9-a658-534ed6c894e2",
+   "wineryID": "04b45dc1-cf8d-512c-b814-5dba5b7abe2c",
+   "name": "Kim Crawford Sauvignon Blanc",
+   "type": "white",
+   "country": "New Zealand",
+   "region": "Marlborough",
+   "appellation": null,
+   "grapes": [
+    "Sauvignon Blanc"
+   ],
+   "year": 2023,
+   "price": 15,
+   "drinkFrom": 2024,
+   "drinkUntil": 2025,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.8,
+    "body": 0.35,
+    "tannin": 0,
+    "fruitiness": 0.85,
+    "flavors": [
+     "Grapefruit",
+     "Passion fruit",
+     "Herbs"
+    ],
+    "notes": "Crisp, fruit-forward and easy-drinking.",
+    "serve": [
+     7,
+     10
+    ],
+    "decant": 0,
+    "aging": 2
+   },
+   "pairings": [
+    "Fish tacos",
+    "Caprese salad",
+    "Ceviche"
+   ]
+  },
+  {
+   "id": "36d9244d-e085-5ba0-b4d6-d109ba7c091f",
+   "productID": "dbcf2570-a910-5e1d-b3dc-17ad8ee499d2",
+   "wineryID": "f4bb3b44-9ad0-52cd-bcf5-63be67b4ad50",
+   "name": "Château d'Yquem",
+   "type": "dessert",
+   "country": "France",
+   "region": "Bordeaux",
+   "appellation": "Sauternes",
+   "grapes": [
+    "Sémillon",
+    "Sauvignon Blanc"
+   ],
+   "year": 2017,
+   "price": 420,
+   "drinkFrom": 2027,
+   "drinkUntil": 2080,
+   "profile": {
+    "sweetness": 0.9,
+    "acidity": 0.7,
+    "body": 0.85,
+    "tannin": 0,
+    "fruitiness": 0.85,
+    "flavors": [
+     "Apricot",
+     "Honey",
+     "Saffron",
+     "Orange peel"
+    ],
+    "notes": "Luscious and honeyed with vibrant acidity.",
+    "serve": [
+     10,
+     12
+    ],
+    "decant": 0,
+    "aging": 50
+   },
+   "pairings": [
+    "Foie gras",
+    "Roquefort",
+    "Tarte tatin"
+   ]
+  },
+  {
+   "id": "4e501c6f-bb65-5f92-bdcd-e8d74fb37e81",
+   "productID": "3ed8b083-fcbf-5c9a-a808-964c5540e66a",
+   "wineryID": "7b2bd7cb-caac-5273-a46d-00076e266e0a",
+   "name": "Pio Cesare Barolo",
+   "type": "red",
+   "country": "Italy",
+   "region": "Piedmont",
+   "appellation": "Barolo DOCG",
+   "grapes": [
+    "Nebbiolo"
+   ],
+   "year": 2019,
+   "price": 75,
+   "drinkFrom": 2026,
+   "drinkUntil": 2040,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.8,
+    "body": 0.7,
+    "tannin": 0.85,
+    "fruitiness": 0.55,
+    "flavors": [
+     "Rose",
+     "Tar",
+     "Cherry",
+     "Truffle"
+    ],
+    "notes": "Aromatic Nebbiolo with firm tannins and high acidity.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 90,
+    "aging": 20
+   },
+   "pairings": [
+    "Tajarin with truffle",
+    "Braised beef",
+    "Mushrooms"
+   ]
+  },
+  {
+   "id": "5f3d42fc-b583-5467-8de2-5e0bf6aa19d5",
+   "productID": "c8a56cc2-4b05-56f9-8592-080e93d19a92",
+   "wineryID": "0f582dc0-642f-50fc-9e64-2c0ec75f535c",
+   "name": "Vega Sicilia Único",
+   "type": "red",
+   "country": "Spain",
+   "region": "Ribera del Duero",
+   "appellation": "Ribera del Duero",
+   "grapes": [
+    "Tempranillo",
+    "Cabernet Sauvignon"
+   ],
+   "year": 2012,
+   "price": 480,
+   "drinkFrom": 2024,
+   "drinkUntil": 2050,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.7,
+    "body": 0.8,
+    "tannin": 0.7,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Plum",
+     "Tobacco",
+     "Balsamic",
+     "Spice"
+    ],
+    "notes": "Complex and savory after long aging before release.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 60,
+    "aging": 30
+   },
+   "pairings": [
+    "Roast suckling lamb",
+    "Jamón ibérico",
+    "Manchego"
+   ]
+  },
+  {
+   "id": "ebaf0e32-3e4f-545c-9e76-0c9bc7bbe1e1",
+   "productID": "58071636-f2f0-5118-a264-c6a0dd409825",
+   "wineryID": "5326332a-7506-5ef1-b8b7-1f71a8605575",
+   "name": "Marqués de Riscal Reserva",
+   "type": "red",
+   "country": "Spain",
+   "region": "Rioja",
+   "appellation": "Rioja DOCa",
+   "grapes": [
+    "Tempranillo",
+    "Graciano",
+    "Mazuelo"
+   ],
+   "year": 2019,
+   "price": 22,
+   "drinkFrom": 2023,
+   "drinkUntil": 2032,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.65,
+    "body": 0.6,
+    "tannin": 0.55,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Red cherry",
+     "Vanilla",
+     "Dill"
+    ],
+    "notes": "Classic Rioja with oak-derived vanilla and red fruit.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 30,
+    "aging": 10
+   },
+   "pairings": [
+    "Lamb chops",
+    "Chorizo",
+    "Paella"
+   ]
+  },
+  {
+   "id": "d4e95423-084a-5c90-b49c-fc000d66df07",
+   "productID": "fe964127-f8f2-5ea4-986f-ea0a4b81f8a4",
+   "wineryID": "00537794-2199-52aa-845c-20591799f0c6",
+   "name": "Dr. Loosen Blue Slate Riesling Kabinett",
+   "type": "white",
+   "country": "Germany",
+   "region": "Mosel",
+   "appellation": null,
+   "grapes": [
+    "Riesling"
+   ],
+   "year": 2022,
+   "price": 25,
+   "drinkFrom": 2023,
+   "drinkUntil": 2035,
+   "profile": {
+    "sweetness": 0.5,
+    "acidity": 0.9,
+    "body": 0.3,
+    "tannin": 0,
+    "fruitiness": 0.8,
+    "flavors": [
+     "Green apple",
+     "Peach",
+     "Slate"
+    ],
+    "notes": "Off-dry and electric with mineral precision.",
+    "serve": [
+     7,
+     9
+    ],
+    "decant": 0,
+    "aging": 12
+   },
+   "pairings": [
+    "Spicy Asian dishes",
+    "Pork schnitzel",
+    "Smoked trout"
+   ]
+  },
+  {
+   "id": "9186da17-8606-5f8d-b499-86f05c8feba3",
+   "productID": "68a6d739-2c4d-5cb5-b294-f3a402d52a3e",
+   "wineryID": "ac5183a0-1f04-5262-9347-43e34b5bc276",
+   "name": "Louis Jadot Bourgogne Pinot Noir",
+   "type": "red",
+   "country": "France",
+   "region": "Burgundy",
+   "appellation": "Bourgogne",
+   "grapes": [
+    "Pinot Noir"
+   ],
+   "year": 2021,
+   "price": 22,
+   "drinkFrom": 2023,
+   "drinkUntil": 2027,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.75,
+    "body": 0.4,
+    "tannin": 0.35,
+    "fruitiness": 0.7,
+    "flavors": [
+     "Raspberry",
+     "Cherry",
+     "Forest floor"
+    ],
+    "notes": "Light, fresh and red-fruited.",
+    "serve": [
+     14,
+     16
+    ],
+    "decant": 0,
+    "aging": 5
+   },
+   "pairings": [
+    "Roast chicken",
+    "Salmon",
+    "Mushroom tart"
+   ]
+  },
+  {
+   "id": "6502ceff-78e4-50e2-96d8-2d7a225fd744",
+   "productID": "dcdbdff8-1510-5673-a7ae-7c18ddd07f31",
+   "wineryID": "679c6d83-b55c-5ff3-9350-e01df0b29e56",
+   "name": "Domaine Leflaive Puligny-Montrachet",
+   "type": "white",
+   "country": "France",
+   "region": "Burgundy",
+   "appellation": "Puligny-Montrachet",
+   "grapes": [
+    "Chardonnay"
+   ],
+   "year": 2020,
+   "price": 210,
+   "drinkFrom": 2024,
+   "drinkUntil": 2035,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.8,
+    "body": 0.6,
+    "tannin": 0,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Lemon curd",
+     "Hazelnut",
+     "Chalk"
+    ],
+    "notes": "Taut and mineral with subtle oak.",
+    "serve": [
+     11,
+     13
+    ],
+    "decant": 20,
+    "aging": 12
+   },
+   "pairings": [
+    "Lobster",
+    "Scallops",
+    "Comté"
+   ]
+  },
+  {
+   "id": "7eb5409a-ad82-50d9-8086-78208445fdda",
+   "productID": "0d493c20-1e43-515b-a5eb-b15061cdc1c5",
+   "wineryID": "17a81a94-dfae-5aff-8f15-9d67f212b5d7",
+   "name": "Ridge Monte Bello",
+   "type": "red",
+   "country": "USA",
+   "region": "Santa Cruz Mountains",
+   "appellation": "Santa Cruz Mountains",
+   "grapes": [
+    "Cabernet Sauvignon",
+    "Merlot",
+    "Petit Verdot",
+    "Cabernet Franc"
+   ],
+   "year": 2018,
+   "price": 260,
+   "drinkFrom": 2028,
+   "drinkUntil": 2050,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.7,
+    "body": 0.75,
+    "tannin": 0.75,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Blackcurrant",
+     "Mint",
+     "Graphite"
+    ],
+    "notes": "Structured mountain Cabernet with freshness.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 90,
+    "aging": 30
+   },
+   "pairings": [
+    "Lamb",
+    "Grilled portobello",
+    "Aged gouda"
+   ]
+  },
+  {
+   "id": "b96af43a-0739-5528-b5d2-d50c1ebcc087",
+   "productID": "1a6bd74d-eba5-5375-a830-b2d9692141bd",
+   "wineryID": "fcbb6888-a8ea-5058-b402-8250493bc0f9",
+   "name": "Caymus Cabernet Sauvignon",
+   "type": "red",
+   "country": "USA",
+   "region": "Napa Valley",
+   "appellation": "Napa Valley",
+   "grapes": [
+    "Cabernet Sauvignon"
+   ],
+   "year": 2021,
+   "price": 95,
+   "drinkFrom": 2023,
+   "drinkUntil": 2032,
+   "profile": {
+    "sweetness": 0.15,
+    "acidity": 0.45,
+    "body": 0.9,
+    "tannin": 0.6,
+    "fruitiness": 0.9,
+    "flavors": [
+     "Blackberry jam",
+     "Cocoa",
+     "Vanilla"
+    ],
+    "notes": "Plush, ripe and velvety.",
+    "serve": [
+     16,
+     18
+    ],
+    "decant": 30,
+    "aging": 10
+   },
+   "pairings": [
+    "Ribeye",
+    "BBQ ribs",
+    "Dark chocolate"
+   ]
+  },
+  {
+   "id": "3d532f0c-9cb3-5bc3-9259-a692534741f5",
+   "productID": "012d29a9-4ae0-5b62-aa10-eef3bc4517a4",
+   "wineryID": "fdf793ea-fc86-5c36-ada2-0138fb9e6457",
+   "name": "Taylor Fladgate 20 Year Old Tawny Port",
+   "type": "fortified",
+   "country": "Portugal",
+   "region": "Douro",
+   "appellation": "Porto",
+   "grapes": [
+    "Touriga Nacional",
+    "Touriga Franca",
+    "Tinta Roriz"
+   ],
+   "year": null,
+   "price": 60,
+   "drinkFrom": null,
+   "drinkUntil": null,
+   "profile": {
+    "sweetness": 0.85,
+    "acidity": 0.55,
+    "body": 0.75,
+    "tannin": 0.2,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Caramel",
+     "Walnut",
+     "Dried fig"
+    ],
+    "notes": "Nutty and mellow from long cask aging.",
+    "serve": [
+     12,
+     14
+    ],
+    "decant": 0,
+    "aging": 0
+   },
+   "pairings": [
+    "Crème brûlée",
+    "Blue cheese",
+    "Pecan pie"
+   ]
+  },
+  {
+   "id": "54561b5c-5838-5dfa-9d40-853f2c4a8125",
+   "productID": "8df05a9e-1507-56fe-bf68-033099cac309",
+   "wineryID": "2c8ecccd-f9ca-5505-a0ee-5e1d420b9cd9",
+   "name": "Veuve Clicquot Yellow Label Brut",
+   "type": "sparkling",
+   "country": "France",
+   "region": "Champagne",
+   "appellation": "Champagne",
+   "grapes": [
+    "Pinot Noir",
+    "Chardonnay",
+    "Pinot Meunier"
+   ],
+   "year": null,
+   "price": 62,
+   "drinkFrom": null,
+   "drinkUntil": null,
+   "profile": {
+    "sweetness": 0.2,
+    "acidity": 0.75,
+    "body": 0.5,
+    "tannin": 0,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Pear",
+     "Brioche",
+     "Citrus"
+    ],
+    "notes": "Full and toasty with Pinot Noir structure.",
+    "serve": [
+     6,
+     9
+    ],
+    "decant": 0,
+    "aging": 3
+   },
+   "pairings": [
+    "Tempura",
+    "Smoked salmon",
+    "Popcorn"
+   ]
+  },
+  {
+   "id": "dcb2d2bd-1632-51b9-bbfe-053277c889e3",
+   "productID": "32c55e13-c970-5aaa-9b3f-085ed4123cba",
+   "wineryID": "fe1176b0-93bd-56a4-97a8-f06916d6d6b7",
+   "name": "Meiomi Pinot Noir",
+   "type": "red",
+   "country": "USA",
+   "region": "California",
+   "appellation": null,
+   "grapes": [
+    "Pinot Noir"
+   ],
+   "year": 2022,
+   "price": 20,
+   "drinkFrom": 2023,
+   "drinkUntil": 2026,
+   "profile": {
+    "sweetness": 0.25,
+    "acidity": 0.5,
+    "body": 0.6,
+    "tannin": 0.35,
+    "fruitiness": 0.85,
+    "flavors": [
+     "Strawberry jam",
+     "Mocha",
+     "Vanilla"
+    ],
+    "notes": "Ripe, juicy and smooth.",
+    "serve": [
+     14,
+     16
+    ],
+    "decant": 0,
+    "aging": 3
+   },
+   "pairings": [
+    "Pizza",
+    "Grilled salmon",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "0182d39c-ed80-5acd-afcf-de48c9483e4a",
+   "productID": "d9f60c26-74d9-5caa-b58b-f49167e97f66",
+   "wineryID": "87665151-2a93-534a-8b8e-b34f987d3999",
+   "name": "La Crema Sonoma Coast Chardonnay",
+   "type": "white",
+   "country": "USA",
+   "region": "Sonoma Coast",
+   "appellation": "Sonoma Coast",
+   "grapes": [
+    "Chardonnay"
+   ],
+   "year": 2022,
+   "price": 22,
+   "drinkFrom": 2023,
+   "drinkUntil": 2026,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.6,
+    "body": 0.6,
+    "tannin": 0,
+    "fruitiness": 0.7,
+    "flavors": [
+     "Meyer lemon",
+     "Pear",
+     "Toasted oak"
+    ],
+    "notes": "Creamy with bright citrus.",
+    "serve": [
+     10,
+     12
+    ],
+    "decant": 0,
+    "aging": 4
+   },
+   "pairings": [
+    "Roast chicken",
+    "Crab cakes",
+    "Corn chowder"
+   ]
+  },
+  {
+   "id": "84034265-cc53-58a0-a8fa-cd3308e677e1",
+   "productID": "734e881d-bdba-5b3b-9546-900b5d5857a2",
+   "wineryID": "9153789b-6289-563f-a79a-968fc824a9f8",
+   "name": "Santa Margherita Pinot Grigio",
+   "type": "white",
+   "country": "Italy",
+   "region": "Trentino-Alto Adige",
+   "appellation": "Valdadige",
+   "grapes": [
+    "Pinot Grigio"
+   ],
+   "year": 2023,
+   "price": 25,
+   "drinkFrom": 2024,
+   "drinkUntil": 2025,
+   "profile": {
+    "sweetness": 0.1,
+    "acidity": 0.65,
+    "body": 0.35,
+    "tannin": 0,
+    "fruitiness": 0.6,
+    "flavors": [
+     "Golden apple",
+     "Citrus",
+     "Almond"
+    ],
+    "notes": "Clean, dry and refreshing.",
+    "serve": [
+     8,
+     10
+    ],
+    "decant": 0,
+    "aging": 2
+   },
+   "pairings": [
+    "Seafood pasta",
+    "Bruschetta",
+    "Light salads"
+   ]
+  },
+  {
+   "id": "afe47b9c-950a-5639-ad7f-e931b8e7e723",
+   "productID": "a858d774-1bdf-555a-a387-dc150b25a78d",
+   "wineryID": "7754a8a7-e6f5-57f8-9f05-d29da00abd16",
+   "name": "Gravner Ribolla Gialla",
+   "type": "orange",
+   "country": "Italy",
+   "region": "Friuli-Venezia Giulia",
+   "appellation": "Venezia Giulia IGT",
+   "grapes": [
+    "Ribolla Gialla"
+   ],
+   "year": 2015,
+   "price": 95,
+   "drinkFrom": 2023,
+   "drinkUntil": 2040,
+   "profile": {
+    "sweetness": 0.05,
+    "acidity": 0.7,
+    "body": 0.65,
+    "tannin": 0.45,
+    "fruitiness": 0.5,
+    "flavors": [
+     "Dried apricot",
+     "Orange peel",
+     "Tea",
+     "Honey"
+    ],
+    "notes": "Amber, textured and savory from long skin contact.",
+    "serve": [
+     13,
+     15
+    ],
+    "decant": 30,
+    "aging": 20
+   },
+   "pairings": [
+    "Roast pork",
+    "Aged cheeses",
+    "Spiced dishes"
+   ]
+  }
+ ]
+}

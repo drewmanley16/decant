@@ -1,0 +1,42 @@
+# Minimal Supabase CLI config for local development (`supabase start`).
+project_id = "decant"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+max_rows = 200
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "decant://auth-callback"
+additional_redirect_urls = ["decant://auth-callback"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[auth.external.apple]
+enabled = true
+# Native Sign in with Apple only needs the app's bundle ID as client id.
+client_id = "com.drewmanley.decant"
+secret = ""
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[functions.identify-wine]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true

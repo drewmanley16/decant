@@ -1,0 +1,6 @@
+// Shared build settings. Secrets live in Secrets.xcconfig (git-ignored).
+// Copy Secrets.example.xcconfig -> Secrets.xcconfig and fill in your Supabase project values.
+// If they are left empty the app runs in on-device Local Mode.
+SUPABASE_URL =
+SUPABASE_ANON_KEY =
+#include? "Secrets.xcconfig"
