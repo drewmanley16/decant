@@ -23,6 +23,7 @@ struct MainTabView: View {
                     .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                     .tag(AppTab.profile)
             }
+            .contentMargins(.bottom, 28, for: .scrollContent)
             .onChange(of: env.selectedTab) { old, new in
                 // The Scan tab is an action, not a destination.
                 if new == .scan {
@@ -43,22 +44,26 @@ struct MainTabView: View {
 /// The raised, prominent Scan button centred over the tab bar.
 private struct ScanTabButton: View {
     var action: () -> Void
+    @State private var tapCount = 0
 
     var body: some View {
-        Button(action: action) {
+        Button { tapCount += 1; action() } label: {
             ZStack {
                 Circle()
                     .fill(LinearGradient(colors: [Palette.burgundy, Palette.burgundyDeep], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 62, height: 62)
-                    .shadow(color: Palette.burgundy.opacity(0.4), radius: 10, y: 4)
-                Circle().strokeBorder(Palette.gold.opacity(0.6), lineWidth: 1.5).frame(width: 62, height: 62)
+                    .frame(width: 56, height: 56)
+                    .shadow(color: Palette.burgundy.opacity(0.35), radius: 8, y: 3)
+                Circle().fill(LinearGradient(colors: [.white.opacity(0.28), .clear], startPoint: .top, endPoint: .center))
+                    .frame(width: 56, height: 56)
+                Circle().strokeBorder(Palette.gold.opacity(0.6), lineWidth: 1.5).frame(width: 56, height: 56)
                 Image(systemName: "viewfinder")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: 23, weight: .semibold))
                     .foregroundStyle(.white)
             }
         }
         .buttonStyle(.plain)
-        .offset(y: -18)
+        .offset(y: -6)
+        .sensoryFeedback(.impact(weight: .medium), trigger: tapCount)
         .accessibilityLabel("Scan a wine label")
         .accessibilityHint("Opens the camera to identify a bottle")
     }

@@ -60,6 +60,10 @@ private struct ProfileContent: View {
     @State private var summary: Loadable<ProfileSummary> = .idle
     @State private var diary: [ReviewItem] = []
     @State private var stats = WineStats()
+    @State private var shortcutCounts: (wishlist: Int, scans: Int, milestones: String)?
+    @State private var editing = false
+    @State private var invite: InviteStatus?
+    @State private var editingEntry: ReviewItem?
 
     var body: some View {
         ScrollView {
@@ -69,6 +73,7 @@ private struct ProfileContent: View {
                     header(s)
                     if s.canViewContent {
                         if isMe { shortcuts }
+                        if isMe, let invite { InviteCard(invite: invite) }
                         statsTeaser
                         diarySection
                     } else {
@@ -93,6 +98,12 @@ private struct ProfileContent: View {
         .task(id: userID) { await load() }
         .onChange(of: env.diaryRevision) { Task { await load() } }
         .onChange(of: env.moderationRevision) { Task { await load() } }
+        .sheet(isPresented: $editing) {
+            if let me = env.currentUser { EditProfileView(profile: me) }
+        }
+        .sheet(item: $editingEntry) { item in
+            RateWineView(wine: item.wine, editing: item.entry)
+        }
     }
 
     private func load() async {
@@ -102,29 +113,76 @@ private struct ProfileContent: View {
             if s.canViewContent {
                 diary = try await env.tastings.entries(forUser: userID)
                 stats = StatsCalculator.compute(diary)
+                if isMe { await loadShortcutCounts() }
             }
         } catch {
             summary = .failed(error.localizedDescription)
         }
     }
 
+    private func loadShortcutCounts() async {
+        async let wishlist = try? env.cellar.wishlist()
+        async let scans = try? env.scans.history(limit: 500)
+        async let bottles = try? env.cellar.bottles()
+        invite = try? await env.auth.myInvite()
+        let milestones = StatsCalculator.milestones(history: StatsCalculator.history(diary), bottles: await bottles ?? [])
+        shortcutCounts = (await wishlist?.count ?? 0, await scans?.count ?? 0,
+                          "\(milestones.filter(\.achieved).count)/\(milestones.count)")
+    }
+
     private func header(_ s: ProfileSummary) -> some View {
-        VStack(spacing: 14) {
-            AvatarView(profile: s.profile, size: 88)
+        // Your own profile reflects edits immediately, without waiting for a reload.
+        let profile = isMe ? (env.currentUser ?? s.profile) : s.profile
+        return VStack(spacing: 14) {
+            if isMe {
+                Button { editing = true } label: {
+                    AvatarView(profile: profile, size: 88)
+                        .overlay(alignment: .bottomTrailing) {
+                            Image(systemName: profile.avatarURL == nil ? "plus" : "pencil")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                                .background(Palette.burgundy, in: Circle())
+                                .overlay(Circle().strokeBorder(Palette.cream, lineWidth: 2.5))
+                                .offset(x: 2, y: 2)
+                        }
+                }
+                .buttonStyle(PressableCardStyle())
+                .accessibilityLabel("Edit profile photo")
+            } else {
+                AvatarView(profile: profile, size: 88)
+            }
             VStack(spacing: 3) {
                 HStack(spacing: 6) {
-                    Text(s.profile.displayName).font(Typo.title2)
-                    if s.profile.isPrivate { Image(systemName: "lock.fill").font(.caption).foregroundStyle(Palette.secondaryText) }
+                    Text(profile.displayName).font(Typo.title2)
+                    if profile.isPrivate { Image(systemName: "lock.fill").font(.caption).foregroundStyle(Palette.secondaryText) }
                 }
-                Text("@\(s.profile.username)").font(.subheadline).foregroundStyle(Palette.secondaryText)
+                Text("@\(profile.username)").font(.subheadline).foregroundStyle(Palette.secondaryText)
             }
-            if let bio = s.profile.bio { Text(bio).font(.callout).multilineTextAlignment(.center) }
+            if let bio = profile.bio {
+                Text(bio).font(.callout).multilineTextAlignment(.center)
+            } else if isMe {
+                Button("Add a bio") { editing = true }
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(Palette.burgundy)
+            }
             HStack(spacing: 0) {
                 counter(s.tastings, "Tastings", route: nil)
                 counter(s.followers, "Followers", route: s.canViewContent ? .followers(userID) : nil)
                 counter(s.following, "Following", route: s.canViewContent ? .following(userID) : nil)
             }
-            if !isMe {
+            if isMe {
+                Button { editing = true } label: {
+                    Label("Edit profile", systemImage: "pencil")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Palette.burgundy)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(Palette.burgundy.opacity(0.08), in: Capsule())
+                        .overlay(Capsule().strokeBorder(Palette.burgundy.opacity(0.2), lineWidth: 1))
+                }
+                .buttonStyle(PressableCardStyle())
+                .padding(.horizontal, 40)
+            } else {
                 FollowButton(isFollowing: s.isFollowing) {
                     Task {
                         if s.isFollowing { try? await env.social.unfollow(userID) } else { try? await env.social.follow(userID) }
@@ -133,7 +191,7 @@ private struct ProfileContent: View {
                 }
             }
             if isMe && env.mode == .local {
-                Label("Local Mode · sample community", systemImage: "iphone")
+                Label("Local Mode · stored on this device", systemImage: "iphone")
                     .font(.caption).foregroundStyle(Palette.secondaryText)
             }
         }
@@ -156,22 +214,33 @@ private struct ProfileContent: View {
 
     private var shortcuts: some View {
         HStack(spacing: 10) {
-            shortcut("Wishlist", "bookmark", .wishlist)
-            shortcut("Scans", "viewfinder", .scanHistory)
-            shortcut("Milestones", "rosette", .milestones)
+            shortcut("Wishlist", "bookmark.fill", .wishlist, value: shortcutCounts.map { "\($0.wishlist)" })
+            shortcut("Scans", "viewfinder", .scanHistory, value: shortcutCounts.map { "\($0.scans)" })
+            shortcut("Milestones", "rosette", .milestones, value: shortcutCounts?.milestones)
         }
     }
 
-    private func shortcut(_ title: String, _ symbol: String, _ route: Route) -> some View {
+    private func shortcut(_ title: String, _ symbol: String, _ route: Route, value: String?) -> some View {
         NavigationLink(value: route) {
-            VStack(spacing: 6) {
-                Image(systemName: symbol).font(.title3).foregroundStyle(Palette.burgundy)
-                Text(title).font(.caption.weight(.semibold)).foregroundStyle(Palette.charcoal)
+            VStack(alignment: .leading, spacing: 10) {
+                Image(systemName: symbol)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Palette.burgundy)
+                    .frame(width: 32, height: 32)
+                    .background(Palette.burgundy.opacity(0.1), in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(value ?? "–")
+                        .font(.system(.title3, design: .serif).weight(.semibold))
+                        .foregroundStyle(Palette.charcoal)
+                        .contentTransition(.numericText())
+                    Text(title).font(.caption.weight(.medium)).foregroundStyle(Palette.secondaryText)
+                }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .cardSurface(padding: 14)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableCardStyle())
+        .accessibilityElement(children: .combine)
     }
 
     private var statsTeaser: some View {
@@ -236,12 +305,75 @@ private struct ProfileContent: View {
                         }
                         .foregroundStyle(Palette.charcoal)
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        if isMe {
+                            Button { editingEntry = item } label: { Label("Edit tasting", systemImage: "pencil") }
+                        }
+                        NavigationLink(value: Route.wine(item.wine)) { Label("View wine", systemImage: "wineglass") }
+                    }
                     Divider()
                 }
             }
         }
+    }
+}
+
+/// Your personal invite code, ready to copy or share.
+private struct InviteCard: View {
+    var invite: InviteStatus
+    @Environment(AppEnvironment.self) private var env
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Label("Invite friends", systemImage: "envelope.open.fill")
+                    .font(Typo.title3)
+                    .foregroundStyle(Palette.charcoal)
+                Spacer()
+                Text(invite.remaining == 0 ? "All used" : "\(invite.remaining) of \(invite.maxUses) left")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(invite.remaining == 0 ? Palette.secondaryText : Palette.burgundy)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Palette.burgundy.opacity(0.08), in: Capsule())
+            }
+            Text("Decant is invite-only. Share your code with people you'd like to taste with.")
+                .font(.callout).foregroundStyle(Palette.secondaryText)
+            HStack(spacing: 10) {
+                Button {
+                    UIPasteboard.general.string = invite.code
+                    env.show("Invite code copied", symbol: "doc.on.doc.fill")
+                } label: {
+                    HStack {
+                        Text(invite.code)
+                            .font(.system(.title3, design: .monospaced).weight(.semibold))
+                            .tracking(4)
+                            .foregroundStyle(Palette.charcoal)
+                        Spacer()
+                        Image(systemName: "doc.on.doc").foregroundStyle(Palette.secondaryText)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(height: 48)
+                    .background(Palette.cream, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Palette.gold.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+                }
+                .buttonStyle(PressableCardStyle())
+                .accessibilityLabel("Copy invite code \(invite.code.map(String.init).joined(separator: " "))")
+                ShareLink(item: "Join me on Decant, the wine diary. My invite code is \(invite.code).") {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .background(Palette.burgundy, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .accessibilityLabel("Share invite")
+                .disabled(invite.remaining == 0)
+            }
+        }
+        .cardSurface()
     }
 }
 

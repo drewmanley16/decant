@@ -20,8 +20,6 @@ final class CellarViewModel {
     var myRatings: [UUID: Double] = [:]
     var inspectedID: UUID?
     var movingID: UUID?
-    var showsSamplePreview = false
-    var sampleBottles: [CellarBottle] = []
 
     private let env: AppEnvironment
     private var savedPlacements: [CellarPlacement] = []
@@ -37,8 +35,8 @@ final class CellarViewModel {
         inStock.reduce(0) { $0 + Double($1.quantity) * ($1.purchasePrice?.doubleValue ?? $1.wine.price?.doubleValue ?? 0) }
     }
 
-    /// Bottles actually rendered (real bottles, or the sample preview for empty cellars).
-    var displayedBottles: [CellarBottle] { showsSamplePreview && isEmpty ? sampleBottles : inStock }
+    /// Bottles actually rendered.
+    var displayedBottles: [CellarBottle] { inStock }
 
     var dimmedIDs: Set<UUID> {
         guard filter.isActive else { return [] }
@@ -68,9 +66,6 @@ final class CellarViewModel {
             bottles = .loaded(loaded)
             await loadHistory()
             relayout()
-            if loaded.allSatisfy({ !$0.isInStock }) && sampleBottles.isEmpty {
-                await loadSamples()
-            }
         } catch {
             bottles = .failed(error.localizedDescription)
         }
@@ -83,21 +78,8 @@ final class CellarViewModel {
         myRatings = Dictionary(history.compactMap { h in h.bestRating.map { (h.wine.id, $0) } }, uniquingKeysWith: max)
     }
 
-    private func loadSamples() async {
-        let wines = (try? await env.catalog.catalogSample(limit: 14)) ?? []
-        sampleBottles = wines.enumerated().map { index, wine in
-            CellarBottle(id: UUID(), wine: wine, quantity: index % 4 == 0 ? 2 : 1, purchasePrice: nil, purchaseDate: nil,
-                         storageLocation: nil, collectionID: nil, addedAt: .now.addingTimeInterval(Double(-index) * 60), consumedCount: 0)
-        }
-        if showsSamplePreview { relayout() }
-    }
-
     func relayout() {
-        if showsSamplePreview && isEmpty {
-            layout = CellarLayout(bottles: sampleBottles, saved: [], sort: .type)
-        } else {
-            layout = CellarLayout(bottles: inStock, saved: savedPlacements, sort: settings.sort, ratings: myRatings)
-        }
+        layout = CellarLayout(bottles: inStock, saved: savedPlacements, sort: settings.sort, ratings: myRatings)
     }
 
     func setSort(_ sort: CellarSort) async {
@@ -122,10 +104,6 @@ final class CellarViewModel {
     }
 
     func move(_ bottleID: UUID, to slot: CellarLayout.Slot) async {
-        guard !(showsSamplePreview && isEmpty) else {
-            layout.move(bottleID, to: slot)
-            return
-        }
         layout.move(bottleID, to: slot)
         savedPlacements = layout.placements
         if settings.sort != .manual {

@@ -105,9 +105,15 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
             let update = ProfileUpdate(username: profile.username, displayName: profile.displayName, bio: profile.bio,
                                        isPrivate: profile.isPrivate, favoriteTypes: profile.favoriteTypes,
                                        defaultVisibility: profile.defaultVisibility, avatarUrl: profile.avatarURL?.absoluteString)
-            let data = try await client.from("profiles").update(update).eq("id", value: profile.id.uuidString)
-                .select().single().execute().data
-            return try decode(ProfileRow.self, data).profile
+            do {
+                let data = try await client.from("profiles").update(update).eq("id", value: profile.id.uuidString)
+                    .select().single().execute().data
+                return try decode(ProfileRow.self, data).profile
+            } catch let error as PostgrestError where error.code == "23505" {
+                throw AppError.validation("That username is taken.")
+            } catch let error as PostgrestError where error.code == "23514" {
+                throw AppError.validation("Usernames are 3–30 letters, numbers, dots or underscores.")
+            }
         }
     }
 
@@ -128,6 +134,34 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         guard let id = try? await me() else { return }
         _ = try? await client.from("profiles").update(["terms_accepted_at": ISO8601DateFormatter().string(from: .now)])
             .eq("id", value: id.uuidString).execute()
+    }
+
+    func checkInvite(_ code: String) async throws -> Bool {
+        try await run {
+            let data = try await client.rpc("check_invite", params: ["p_code": code]).execute().data
+            return try JSONDecoder().decode(Bool.self, from: data)
+        }
+    }
+
+    func redeemInvite(_ code: String) async throws -> Profile {
+        let id = try await me()
+        return try await run {
+            do {
+                try await client.rpc("redeem_invite", params: ["p_code": code]).execute()
+            } catch let error as PostgrestError where error.code == "P0001" {
+                throw AppError.validation(error.message)
+            }
+            return try await loadProfile(id)
+        }
+    }
+
+    func myInvite() async throws -> InviteStatus {
+        struct Row: Decodable { var code: String; var max_uses: Int; var used: Int }
+        return try await run {
+            let data = try await client.rpc("my_invite").execute().data
+            guard let row = try JSONDecoder().decode([Row].self, from: data).first else { throw AppError.notFound }
+            return InviteStatus(code: row.code, maxUses: row.max_uses, used: row.used)
+        }
     }
 
     func deleteAccount() async throws {
@@ -320,23 +354,41 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         }
     }
 
+    /// Every editable column, always sent, so clearing a field writes null.
     private struct EntryUpdate: Encodable {
-        var rating: Double?
-        var location, occasion: String?
-        var drink_again: Bool?
-        var is_favorite: Bool
-        var visibility: Visibility
+        var entry: TastingEntry
+        enum Key: String, CodingKey {
+            case rating, location, occasion, visibility
+            case consumedOn = "consumed_on", drinkAgain = "drink_again", isFavorite = "is_favorite"
+            case taggedUserIds = "tagged_user_ids", photoPaths = "photo_paths"
+        }
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: Key.self)
+            try c.encode(entry.rating.map(TastingEntry.normalizedRating), forKey: .rating)
+            try c.encode(SupabaseCoding.dayString(entry.consumedOn), forKey: .consumedOn)
+            try c.encode(entry.location?.nilIfBlank, forKey: .location)
+            try c.encode(entry.occasion?.nilIfBlank, forKey: .occasion)
+            try c.encode(entry.drinkAgain, forKey: .drinkAgain)
+            try c.encode(entry.isFavorite, forKey: .isFavorite)
+            try c.encode(entry.visibility, forKey: .visibility)
+            try c.encode(entry.taggedUserIDs, forKey: .taggedUserIds)
+            try c.encode(entry.photoPaths, forKey: .photoPaths)
+        }
     }
 
     func updateEntry(_ entry: TastingEntry) async throws {
         try await run {
-            let update = EntryUpdate(rating: entry.rating, location: entry.location, occasion: entry.occasion,
-                                     drink_again: entry.drinkAgain, is_favorite: entry.isFavorite, visibility: entry.visibility)
-            try await client.from("tasting_entries").update(update).eq("id", value: entry.id.uuidString).execute()
+            try await client.from("tasting_entries").update(EntryUpdate(entry: entry)).eq("id", value: entry.id.uuidString).execute()
             if let review = entry.review?.nilIfBlank {
                 try await client.from("wine_reviews").upsert(ReviewRow(entryId: entry.id, userId: entry.userID, body: review)).execute()
             } else {
                 try await client.from("wine_reviews").delete().eq("entry_id", value: entry.id.uuidString).execute()
+            }
+            if let notes = entry.personalNotes?.nilIfBlank {
+                try await client.from("tasting_private_notes")
+                    .upsert(PrivateNoteRow(entryId: entry.id, userId: entry.userID, notes: notes)).execute()
+            } else {
+                try await client.from("tasting_private_notes").delete().eq("entry_id", value: entry.id.uuidString).execute()
             }
         }
     }

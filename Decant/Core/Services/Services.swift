@@ -35,6 +35,10 @@ protocol AuthService: Sendable {
     func deleteAccount() async throws
     /// Records that the signed-in user accepted the Terms & Community Guidelines.
     func recordTermsAcceptance() async
+    // Invite-only membership
+    func checkInvite(_ code: String) async throws -> Bool
+    func redeemInvite(_ code: String) async throws -> Profile
+    func myInvite() async throws -> InviteStatus
 }
 
 protocol WineCatalogService: Sendable {

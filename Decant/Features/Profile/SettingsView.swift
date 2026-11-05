@@ -1,12 +1,12 @@
-import PhotosUI
 import SwiftUI
 import UserNotifications
 
 struct SettingsView: View {
     @Environment(AppEnvironment.self) private var env
-    @State private var profile: Profile?
-    @State private var avatarItem: PhotosPickerItem?
-    @State private var saving = false
+    @State private var isPrivate = false
+    @State private var defaultVisibility: Visibility = .everyone
+    @State private var loaded = false
+    @State private var editingProfile = false
     @State private var confirmDelete = false
     @State private var deleteText = ""
     @State private var error: String?
@@ -14,48 +14,36 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            if let binding = Binding($profile) {
-                Section("Profile") {
-                    HStack {
-                        AvatarView(profile: binding.wrappedValue, size: 56)
-                        PhotosPicker("Change photo", selection: $avatarItem, matching: .images)
-                    }
-                    TextField("Display name", text: binding.displayName)
-                    TextField("Username", text: binding.username)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    TextField("Bio", text: Binding(get: { binding.wrappedValue.bio ?? "" }, set: { binding.wrappedValue.bio = $0.nilIfBlank }), axis: .vertical)
-                        .lineLimit(1...4)
-                }
+            if let me = env.currentUser {
                 Section {
-                    Toggle("Private profile", isOn: binding.isPrivate)
-                    Picker("Default review visibility", selection: binding.defaultVisibility) {
+                    Button { editingProfile = true } label: {
+                        HStack(spacing: 14) {
+                            AvatarView(profile: me, size: 56)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(me.displayName).font(.headline).foregroundStyle(Palette.charcoal)
+                                Text("@\(me.username)").font(.subheadline).foregroundStyle(Palette.secondaryText)
+                            }
+                            Spacer()
+                            Text("Edit").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.burgundy)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Edit photo, name, username and bio")
+                }
+
+                Section {
+                    Toggle("Private profile", isOn: $isPrivate)
+                    Picker("Default review visibility", selection: $defaultVisibility) {
                         ForEach(Visibility.allCases) { Text($0.label).tag($0) }
                     }
                 } header: {
                     Text("Privacy")
                 } footer: {
-                    Text("Private profiles approve followers. Your cellar is always private; private notes are only visible to you.")
-                }
-                Section("Favorite styles") {
-                    FlowLayout {
-                        ForEach(WineType.allCases) { type in
-                            Button {
-                                if let i = binding.wrappedValue.favoriteTypes.firstIndex(of: type) {
-                                    binding.wrappedValue.favoriteTypes.remove(at: i)
-                                } else {
-                                    binding.wrappedValue.favoriteTypes.append(type)
-                                }
-                            } label: { Chip(title: type.displayName, isSelected: binding.wrappedValue.favoriteTypes.contains(type)) }
-                            .buttonStyle(.plain)
-                        }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Private profiles approve followers. Your cellar is always private; private notes are only visible to you.")
+                        if let error { Text(error).foregroundStyle(Palette.burgundy) }
                     }
-                    .padding(.vertical, 4)
-                }
-                Section {
-                    Button(saving ? "Saving…" : "Save changes") { Task { await save() } }
-                        .disabled(saving || binding.wrappedValue == env.currentUser)
-                    if let error { Text(error).font(.footnote).foregroundStyle(Palette.burgundy) }
                 }
             }
 
@@ -88,6 +76,20 @@ struct SettingsView: View {
                 Link(destination: LegalLinks.terms) { Label("Terms of Use", systemImage: "doc.text") }
             }
 
+            Section {
+                // Required by CC BY 4.0: credit, licence link, and a note that the data was adapted.
+                Link(destination: URL(string: "https://www.liv-ex.com/lwin/")!) {
+                    Label("Wine identities: LWIN by Liv-ex", systemImage: "books.vertical")
+                }
+                Link(destination: URL(string: "https://creativecommons.org/licenses/by/4.0/")!) {
+                    Label("Licensed under CC BY 4.0", systemImage: "c.circle")
+                }
+            } header: {
+                Text("Data sources")
+            } footer: {
+                Text("Producer, wine, region and colour data comes from the LWIN database, adapted to Decant's catalog. Ratings come only from Decant members.")
+            }
+
             Section("Your data") {
                 NavigationLink("Scan history", value: Route.scanHistory)
                 NavigationLink("Wishlist", value: Route.wishlist)
@@ -110,24 +112,19 @@ struct SettingsView: View {
         }
         .brandedForm()
         .navigationTitle("Settings")
+        .sheet(isPresented: $editingProfile) {
+            if let me = env.currentUser { EditProfileView(profile: me) }
+        }
         .task {
-            profile = env.currentUser
+            if let me = env.currentUser {
+                isPrivate = me.isPrivate
+                defaultVisibility = me.defaultVisibility
+            }
+            loaded = true
             await refreshNotificationStatus()
         }
-        .onChange(of: avatarItem) { _, item in
-            guard let item else { return }
-            Task {
-                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data),
-                      let jpeg = image.jpegForUpload(maxDimension: 600) else { return }
-                do {
-                    let url = try await env.auth.uploadAvatar(jpeg)
-                    profile?.avatarURL = url
-                    await save()
-                } catch {
-                    self.error = error.localizedDescription
-                }
-            }
-        }
+        .onChange(of: isPrivate) { savePrivacy() }
+        .onChange(of: defaultVisibility) { savePrivacy() }
         .alert("Delete your account?", isPresented: $confirmDelete) {
             TextField("Type DELETE to confirm", text: $deleteText)
             Button("Delete forever", role: .destructive) {
@@ -146,18 +143,23 @@ struct SettingsView: View {
         notificationsStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
-    private func save() async {
-        guard let profile else { return }
-        saving = true
-        defer { saving = false }
-        do {
-            let updated = try await env.auth.updateProfile(profile)
-            env.currentUser = updated
-            self.profile = updated
-            error = nil
-            env.show("Profile updated")
-        } catch {
-            self.error = error.localizedDescription
+    /// Privacy settings save as soon as they change; on failure they snap back.
+    private func savePrivacy() {
+        guard loaded, var profile = env.currentUser,
+              profile.isPrivate != isPrivate || profile.defaultVisibility != defaultVisibility else { return }
+        profile.isPrivate = isPrivate
+        profile.defaultVisibility = defaultVisibility
+        Task {
+            do {
+                env.currentUser = try await env.auth.updateProfile(profile)
+                error = nil
+            } catch {
+                self.error = error.localizedDescription
+                if let me = env.currentUser {
+                    isPrivate = me.isPrivate
+                    defaultVisibility = me.defaultVisibility
+                }
+            }
         }
     }
 }

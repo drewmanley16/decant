@@ -1,0 +1,15 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/t/:id", "destination": "/index.html" },
+    { "source": "/u/:id", "destination": "/index.html" },
+    { "source": "/w/:id", "destination": "/index.html" },
+    { "source": "/invite/:code", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    }
+  ]
+}

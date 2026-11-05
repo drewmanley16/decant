@@ -5,12 +5,25 @@ struct DecantApp: App {
     @State private var env = AppEnvironment.live()
 
     init() {
-        UINavigationBar.appearance().largeTitleTextAttributes = [
-            .font: UIFont.systemFont(ofSize: 34, weight: .semibold).withSerifDesign(),
-        ]
-        UINavigationBar.appearance().titleTextAttributes = [
-            .font: UIFont.systemFont(ofSize: 17, weight: .semibold).withSerifDesign(),
-        ]
+        let largeTitle: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 34, weight: .semibold).withSerifDesign()]
+        let title: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 17, weight: .semibold).withSerifDesign()]
+        // Transparent at rest; a cream bar once content scrolls underneath, so the
+        // floating toolbar buttons never sit directly on top of cards.
+        let scrolled = UINavigationBarAppearance()
+        scrolled.configureWithDefaultBackground()
+        scrolled.backgroundEffect = nil
+        scrolled.backgroundColor = UIColor(Palette.cream).withAlphaComponent(0.96)
+        scrolled.shadowColor = UIColor(Palette.hairline)
+        scrolled.largeTitleTextAttributes = largeTitle
+        scrolled.titleTextAttributes = title
+        let atRest = UINavigationBarAppearance()
+        atRest.configureWithTransparentBackground()
+        atRest.largeTitleTextAttributes = largeTitle
+        atRest.titleTextAttributes = title
+        let bar = UINavigationBar.appearance()
+        bar.standardAppearance = scrolled
+        bar.compactAppearance = scrolled
+        bar.scrollEdgeAppearance = atRest
     }
 
     var body: some Scene {
@@ -47,6 +60,9 @@ struct RootView: View {
         }
         .animation(.smooth(duration: 0.4), value: env.phase)
         .overlay(alignment: .top) { ToastOverlay() }
+        .sensoryFeedback(.error, trigger: env.toast?.id) { _, _ in
+            env.toast?.symbol.hasPrefix("exclamationmark") == true
+        }
     }
 }
 

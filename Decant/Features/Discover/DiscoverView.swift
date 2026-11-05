@@ -32,13 +32,27 @@ final class DiscoverViewModel {
                 return ReviewItem(entry: entry, author: item.actor, wine: wine)
             }
             let engine = RecommendationEngine(catalog: catalog, myHistory: mine, friendActivity: friendActivity)
-            sections = .loaded(engine.sections())
+            sections = .loaded(Self.deduplicated(engine.sections()))
             feed = .loaded(feedItems)
             recentlyViewed = await recentTask ?? []
             unreadNotifications = (await notificationsTask ?? []).filter { !$0.isRead }.count
         } catch {
             if sections.value == nil { sections = .failed(error.localizedDescription) }
             if feed.value == nil { feed = .failed(error.localizedDescription) }
+        }
+    }
+
+    /// Each wine appears in at most one section, so the page doesn't repeat itself.
+    /// Sections left with fewer than two wines are dropped.
+    static func deduplicated(_ sections: [DiscoverSection]) -> [DiscoverSection] {
+        var shown = Set<UUID>()
+        return sections.compactMap { section in
+            var section = section
+            let fresh = section.wines.filter { !shown.contains($0.id) }
+            // Region cards lead with the place, so a repeated bottle there still reads as new.
+            if fresh.count >= 2 { section.wines = fresh } else if section.kind != .unexplored { return nil }
+            section.wines.forEach { shown.insert($0.id) }
+            return section
         }
     }
 
@@ -100,12 +114,18 @@ private struct DiscoverContent: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 28) {
-            greeting
-            scanPrompt
             switch model.sections {
             case .loaded(let sections):
-                ForEach(sections) { section in
-                    WineCarousel(title: section.title, subtitle: section.subtitle, wines: section.wines)
+                ForEach(Array(sections.enumerated()), id: \.element.id) { index, section in
+                    if index == 0 {
+                        FeaturedWineSection(section: section)
+                    } else {
+                        switch section.kind {
+                        case .trending: RankedWineList(section: section)
+                        case .unexplored: RegionCarousel(section: section)
+                        default: WineCarousel(title: section.title, subtitle: section.subtitle, wines: section.wines)
+                        }
+                    }
                 }
             case .failed(let message):
                 ErrorStateView(message: message) { Task { await model.load() } }
@@ -118,53 +138,6 @@ private struct DiscoverContent: View {
             feed
         }
         .padding(.vertical, 12)
-    }
-
-    private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(Date.now.formatted(.dateTime.weekday(.wide).month().day())).eyebrow()
-            Text("Good \(partOfDay), \(env.currentUser?.displayName.split(separator: " ").first.map(String.init) ?? "friend")")
-                .font(Typo.title)
-        }
-        .padding(.horizontal, Metrics.gutter)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var partOfDay: String {
-        switch Calendar.current.component(.hour, from: .now) {
-        case 5..<12: "morning"
-        case 12..<17: "afternoon"
-        default: "evening"
-        }
-    }
-
-    private var scanPrompt: some View {
-        Button { env.isScannerPresented = true } label: {
-            HStack(spacing: 16) {
-                Image(systemName: "viewfinder")
-                    .font(.system(size: 26, weight: .semibold))
-                    .frame(width: 56, height: 56)
-                    .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("What's in your glass?").font(.system(.headline, design: .serif))
-                    Text("Scan a label to identify, rate and cellar it").font(.subheadline).opacity(0.85)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-            }
-            .foregroundStyle(.white)
-            .padding(18)
-            .background {
-                ZStack {
-                    // Fixed deep burgundy in both appearances; the adaptive tint is too light for white text in dark mode.
-                    LinearGradient(colors: [Color(red: 0.48, green: 0.10, blue: 0.18), Color(red: 0.31, green: 0.06, blue: 0.11)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    Circle().fill(Palette.gold.opacity(0.18)).frame(width: 160).offset(x: 130, y: -40).blur(radius: 10)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
-            }
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, Metrics.gutter)
     }
 
     private var skeletonCarousel: some View {
@@ -181,12 +154,13 @@ private struct DiscoverContent: View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: "Friend activity", subtitle: "What your circle has been drinking")
             switch model.feed {
-            case .loaded(let items) where items.isEmpty:
+            case .loaded(let all) where friendItems(all).isEmpty:
                 EmptyStateView(symbol: "person.2", title: "Your feed is quiet",
                                message: "Follow friends to see what they're tasting.", actionTitle: "Find friends") {
                     env.selectedTab = .search
                 }
-            case .loaded(let items):
+            case .loaded(let all):
+                let items = friendItems(all)
                 ForEach(items) { item in
                     FeedCard(item: item, onLike: { Task { await model.toggleLike(item) } })
                         .onAppear { if item.id == items.last?.id { Task { await model.loadMore() } } }
@@ -199,6 +173,11 @@ private struct DiscoverContent: View {
             }
         }
         .padding(.horizontal, Metrics.gutter)
+    }
+
+    /// Your own activity isn't "friend activity".
+    private func friendItems(_ items: [FeedItem]) -> [FeedItem] {
+        items.filter { $0.actor.id != env.currentUser?.id }
     }
 }
 
@@ -214,7 +193,7 @@ struct WineCarousel: View {
                 LazyHStack(spacing: 14) {
                     ForEach(wines) { wine in
                         NavigationLink(value: Route.wine(wine)) { WineCard(wine: wine) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(PressableCardStyle())
                     }
                 }
                 .padding(.horizontal, Metrics.gutter)
@@ -251,5 +230,177 @@ struct FeedCard: View {
             }
             .buttonStyle(.plain)
         }
+    }
+}
+
+// MARK: - Section layouts
+
+/// Leads the page: one large hero card, then the rest of the shelf.
+private struct FeaturedWineSection: View {
+    var section: DiscoverSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: section.title, subtitle: section.subtitle).padding(.horizontal, Metrics.gutter)
+            if let hero = section.wines.first {
+                NavigationLink(value: Route.wine(hero)) { FeaturedWineCard(wine: hero) }
+                    .buttonStyle(PressableCardStyle())
+                    .padding(.horizontal, Metrics.gutter)
+            }
+            let rest = Array(section.wines.dropFirst())
+            if !rest.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 14) {
+                        ForEach(rest) { wine in
+                            NavigationLink(value: Route.wine(wine)) { WineCard(wine: wine) }
+                                .buttonStyle(PressableCardStyle())
+                        }
+                    }
+                    .padding(.horizontal, Metrics.gutter)
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+}
+
+private struct FeaturedWineCard: View {
+    var wine: Wine
+
+    var body: some View {
+        HStack(spacing: 18) {
+            BottleStage(tint: Palette.wineColor(wine.type)) {
+                BottleArtView(wine: wine, height: 190)
+            }
+            .frame(width: 120, height: 220)
+            .background(Palette.wineColor(wine.type).opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 8) {
+                TypeDot(type: wine.type)
+                Text(wine.name)
+                    .font(Typo.title2)
+                    .foregroundStyle(Palette.charcoal)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("\(wine.producer) · \(wine.vintageLabel)")
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.secondaryText)
+                    .lineLimit(1)
+                if !wine.locationLine.isEmpty {
+                    Label(wine.locationLine, systemImage: "mappin.and.ellipse")
+                        .font(.caption)
+                        .foregroundStyle(Palette.secondaryText)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                HStack {
+                    if let rating = wine.communityRating {
+                        StarRatingView(rating: rating, size: 13)
+                    } else {
+                        RatingPill(rating: nil, count: nil)
+                    }
+                    Spacer()
+                    if let price = wine.price {
+                        Text(price.formatted).font(.system(.headline, design: .serif)).foregroundStyle(Palette.charcoal)
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardSurface(padding: 12)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Numbered top-five list for Trending.
+private struct RankedWineList: View {
+    var section: DiscoverSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: section.title, subtitle: section.subtitle)
+            VStack(spacing: 0) {
+                let top = Array(section.wines.prefix(5))
+                ForEach(Array(top.enumerated()), id: \.element.id) { index, wine in
+                    NavigationLink(value: Route.wine(wine)) {
+                        HStack(spacing: 12) {
+                            Text("\(index + 1)")
+                                .font(.system(.title2, design: .serif).weight(.semibold))
+                                .foregroundStyle(index == 0 ? Palette.gold : Palette.secondaryText.opacity(0.7))
+                                .frame(width: 26)
+                            WineRow(wine: wine)
+                        }
+                        .padding(.horizontal, 14)
+                    }
+                    .buttonStyle(.plain)
+                    if index < top.count - 1 {
+                        Divider().overlay(Palette.hairline).padding(.leading, 52)
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+            .cardSurface(padding: 0)
+        }
+        .padding(.horizontal, Metrics.gutter)
+    }
+}
+
+/// Wider cards that lead with the place, not the bottle.
+private struct RegionCarousel: View {
+    var section: DiscoverSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: section.title, subtitle: section.subtitle).padding(.horizontal, Metrics.gutter)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 14) {
+                    ForEach(section.wines) { wine in
+                        NavigationLink(value: Route.wine(wine)) { RegionCard(wine: wine) }
+                            .buttonStyle(PressableCardStyle())
+                    }
+                }
+                .padding(.horizontal, Metrics.gutter)
+                .padding(.vertical, 4)
+            }
+        }
+    }
+}
+
+private struct RegionCard: View {
+    var wine: Wine
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            LinearGradient(colors: [Palette.wineColor(wine.type).opacity(0.85), Palette.wineColor(wine.type).opacity(0.55)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: [.black.opacity(0.35), .clear], startPoint: .bottom, endPoint: .center)
+            BottleArtView(wine: wine, height: 150)
+                .rotationEffect(.degrees(8))
+                .offset(x: -14, y: 26)
+            VStack(alignment: .leading, spacing: 4) {
+                Text((wine.country ?? "").uppercased())
+                    .font(.caption2.weight(.semibold)).tracking(1.2)
+                    .foregroundStyle(.white.opacity(0.75))
+                Text(wine.region ?? wine.locationLine)
+                    .font(Typo.title2)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                Spacer()
+                Text(wine.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .frame(maxWidth: 130, alignment: .leading)
+                Text(wine.vintageLabel).font(.caption).foregroundStyle(.white.opacity(0.75))
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .frame(width: 230, height: 190)
+        .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        .accessibilityElement(children: .combine)
     }
 }

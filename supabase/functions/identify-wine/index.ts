@@ -116,6 +116,10 @@ Deno.serve(async (req) => {
   const { data: { user } } = await userClient.auth.getUser();
   if (!user) return json({ error: "unauthorized" }, 401);
 
+  // Invite-only: accounts that haven't redeemed a code can't spend AI credits.
+  const { data: member } = await admin.from("profiles").select("member_since").eq("id", user.id).maybeSingle();
+  if (!member?.member_since) return json({ error: "invite required" }, 403);
+
   let payload: { image_base64?: string; ocr_text?: string[]; text_key?: string };
   try {
     payload = await req.json();
@@ -164,12 +168,40 @@ Deno.serve(async (req) => {
   });
   if (matchError) console.error(matchError);
 
+  // Catalog rows can be "any vintage" (LWIN) or a different year of the right
+  // wine. For strong matches, swap in the exact vintage printed on the label
+  // (found or created) so the user rates and cellars the right bottle.
+  type Match = { vintage_id: string; score: number };
+  let candidates: Match[] = (matches ?? []).map((m: Match) => ({ vintage_id: m.vintage_id, score: m.score }));
+  if (label.vintage && candidates.length) {
+    const strong = candidates.filter((m) => m.score >= 0.5);
+    const { data: rows } = strong.length
+      ? await userClient.from("wine_catalog").select("id, product_id, year, vintage_config").in("id", strong.map((m) => m.vintage_id))
+      : { data: [] };
+    const byId = new Map((rows ?? []).map((r: { id: string }) => [r.id, r]));
+    for (const m of strong) {
+      const row = byId.get(m.vintage_id) as { product_id: string; year: number | null; vintage_config: string | null } | undefined;
+      if (!row || row.year === label.vintage || row.vintage_config === "non_vintage") continue;
+      const { data: vintageId, error } = await userClient.rpc("ensure_vintage", {
+        p_product: row.product_id, p_year: label.vintage, p_bottle_size_ml: label.volume_ml ?? 750,
+      });
+      if (error || !vintageId) { if (error) console.error(error); continue; }
+      // Undo match_wines' year penalty now that the year is exact.
+      m.score = Math.min(1, m.score / (row.year === null ? 0.97 : 0.75));
+      m.vintage_id = vintageId as string;
+    }
+    // Several rows of one wine can resolve to the same vintage; keep the best.
+    const best = new Map<string, Match>();
+    for (const m of candidates) if ((best.get(m.vintage_id)?.score ?? -1) < m.score) best.set(m.vintage_id, m);
+    candidates = [...best.values()].sort((a, b) => b.score - a.score);
+  }
+
   return json({
     text_hash: textHash,
     extraction: label,
     identity_confidence: cached.identity_confidence,
     suggestion: cached.suggestion,
-    candidates: (matches ?? []).map((m: { vintage_id: string; score: number }) => ({
+    candidates: candidates.map((m) => ({
       vintage_id: m.vintage_id,
       // Discount catalog similarity by how well the label itself was read.
       score: Math.min(1, m.score * (0.6 + 0.4 * cached.identity_confidence)),

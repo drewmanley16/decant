@@ -85,9 +85,6 @@ final class AppEnvironment {
     }
 
     static func live(config: AppConfig = .current) -> AppEnvironment {
-        #if DEBUG
-        if ScreenshotSeed.isEnabled { return ScreenshotSeed.makeEnvironment() }
-        #endif
         if let url = config.supabaseURL, let key = config.supabaseAnonKey {
             let backend = SupabaseBackend(url: url, anonKey: key)
             Task { await ImageLoader.shared.setResolver { await backend.resolveImageURL($0) } }
@@ -107,24 +104,14 @@ final class AppEnvironment {
                               cellar: backend, scans: backend, media: backend, remoteReader: nil)
     }
 
+    /// Signed in to the cloud but hasn't redeemed an invite code yet.
+    var needsInvite: Bool {
+        mode == .supabase && currentUser != nil && currentUser?.memberSince == nil
+    }
+
     func bootstrap() async {
-        #if DEBUG
-        if ScreenshotSeed.isEnabled, let backend = auth as? LocalBackend {
-            await ScreenshotSeed.populate(backend)
-            switch ScreenshotSeed.argument("-tab") {
-            case "cellar": selectedTab = .cellar
-            case "search": selectedTab = .search
-            case "profile": selectedTab = .profile
-            default: break
-            }
-            if CommandLine.arguments.contains("-inspectFirst"),
-               let first = try? await cellar.bottles().first(where: { $0.wine.name == "Château Margaux" }) {
-                cellarFocusWineID = first.wine.id
-            }
-        }
-        #endif
         currentUser = await auth.restoreSession()
-        phase = currentUser != nil && onboardingComplete ? .ready : .onboarding
+        phase = currentUser != nil && onboardingComplete && !needsInvite ? .ready : .onboarding
     }
 
     func didSignIn(_ profile: Profile) {

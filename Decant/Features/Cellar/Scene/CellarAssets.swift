@@ -58,7 +58,7 @@ final class CellarAssets {
 
     func bodyGeometry(_ style: BottleStyle) -> SCNGeometry {
         if let g = bodyGeometries[style] { return g }
-        let g = Self.lathe(profile: Self.profile(style), segments: 36)
+        let g = Self.lathe(profile: Self.profile(style), segments: 64)
         bodyGeometries[style] = g
         return g
     }
@@ -100,12 +100,15 @@ final class CellarAssets {
         let tint = Palette.wineUIColor(type)
         var r: CGFloat = 0, g: CGFloat = 0, bl: CGFloat = 0, al: CGFloat = 0
         tint.getRed(&r, green: &g, blue: &bl, alpha: &al)
-        let darken: CGFloat = type == .red || type == .fortified ? 0.55 : 0.8
+        let darken: CGFloat = type == .red || type == .fortified ? 0.5 : 0.78
         m.diffuse.contents = UIColor(red: r * darken, green: g * darken, blue: bl * darken, alpha: 1)
-        m.metalness.contents = 0.15
-        m.roughness.contents = 0.07
+        // Glass is a dielectric: no metalness, very smooth, strong clear coat so the
+        // studio softboxes in the environment read as crisp vertical highlights.
+        m.metalness.contents = 0.0
+        m.roughness.contents = 0.04
         m.clearCoat.contents = 1.0
-        m.clearCoatRoughness.contents = 0.03
+        m.clearCoatRoughness.contents = 0.01
+        m.fresnelExponent = 2.5
         glassMaterials[type] = m
         return m
     }
@@ -120,6 +123,17 @@ final class CellarAssets {
         m.roughness.contents = 0.7
         m.metalness.contents = 0.0
         m.isDoubleSided = false
+        return m
+    }
+
+    /// Rack back panels sit in shadow; a darker copy keeps bottles from blending into them.
+    func backPanelWood(_ finish: ShelfFinish) -> SCNMaterial {
+        let key = "back-\(finish)"
+        if let m = capsuleMaterials[key] { return m }
+        let m = wood(finish).copy() as! SCNMaterial
+        m.diffuse.intensity = 0.45
+        m.roughness.contents = 0.8
+        capsuleMaterials[key] = m
         return m
     }
 
@@ -208,7 +222,7 @@ extension BottleStyle: Hashable {}
 enum CellarTextures {
     static func woodColor(_ finish: ShelfFinish) -> UIColor {
         switch finish {
-        case .oak: UIColor(hex: 0x8E6440)
+        case .oak: UIColor(hex: 0x6E4C33)
         case .walnut: UIColor(hex: 0x3E2615)
         case .ebony: UIColor(hex: 0x231B17)
         case .whitewash: UIColor(hex: 0xD8CDBE)
@@ -290,16 +304,34 @@ enum CellarTextures {
         }
     }
 
-    /// Warm gradient used as image-based lighting for glass reflections.
+    /// Equirectangular "photo studio" used as image-based lighting: a dark warm room
+    /// with tall softboxes, so glass picks up long vertical highlights like a product shot.
     static func environment() -> UIImage {
-        let size = CGSize(width: 256, height: 128)
+        let size = CGSize(width: 1024, height: 512)
         return UIGraphicsImageRenderer(size: size).image { ctx in
-            let colors = [UIColor(hex: 0x14100E).cgColor, UIColor(hex: 0x6B4A30).cgColor,
-                          UIColor(hex: 0xFFD9A0).cgColor, UIColor(hex: 0x3A2A20).cgColor, UIColor(hex: 0x0E0B0A).cgColor]
-            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray,
-                                      locations: [0, 0.35, 0.5, 0.65, 1])
-            if let gradient {
-                ctx.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
+            let cg = ctx.cgContext
+            let space = CGColorSpaceCreateDeviceRGB()
+            let base = [UIColor(hex: 0x0C0908).cgColor, UIColor(hex: 0x3A2818).cgColor,
+                        UIColor(hex: 0x6B4A30).cgColor, UIColor(hex: 0x241912).cgColor, UIColor(hex: 0x080606).cgColor]
+            if let g = CGGradient(colorsSpace: space, colors: base as CFArray, locations: [0, 0.4, 0.52, 0.62, 1]) {
+                cg.drawLinearGradient(g, start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
+            }
+            // (centre u, width as fraction, brightness, warm?)
+            let boxes: [(CGFloat, CGFloat, CGFloat, Bool)] = [
+                (0.12, 0.05, 1.0, true), (0.37, 0.035, 0.85, false), (0.5, 0.06, 1.0, true),
+                (0.63, 0.03, 0.7, false), (0.88, 0.05, 0.9, true),
+            ]
+            for (u, w, b, warm) in boxes {
+                let color = warm ? UIColor(red: 1, green: 0.86 * b, blue: 0.64 * b, alpha: 1) : UIColor(red: 0.92 * b, green: 0.94 * b, blue: b, alpha: 1)
+                let rect = CGRect(x: (u - w / 2) * size.width, y: size.height * 0.18, width: w * size.width, height: size.height * 0.5)
+                // Soft falloff at the edges of each softbox.
+                let colors = [color.withAlphaComponent(0).cgColor, color.cgColor, color.cgColor, color.withAlphaComponent(0).cgColor]
+                if let g = CGGradient(colorsSpace: space, colors: colors as CFArray, locations: [0, 0.3, 0.7, 1]) {
+                    cg.saveGState()
+                    cg.clip(to: rect)
+                    cg.drawLinearGradient(g, start: CGPoint(x: rect.minX, y: 0), end: CGPoint(x: rect.maxX, y: 0), options: [])
+                    cg.restoreGState()
+                }
             }
         }
     }

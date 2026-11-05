@@ -101,6 +101,7 @@ struct ReviewThreadView: View {
     @State private var draft = ""
     @State private var sending = false
     @State private var confirmDelete = false
+    @State private var editingItem: ReviewItem?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -143,6 +144,17 @@ struct ReviewThreadView: View {
         .navigationTitle("Review")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
+        .onChange(of: env.diaryRevision) { Task { await load() } }
+        .sheet(item: $editingItem) { review in
+            RateWineView(wine: review.wine, editing: review.entry)
+        }
+        .toolbar {
+            if case .loaded(let review) = item, review.author.id == env.currentUser?.id {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit") { editingItem = review }
+                }
+            }
+        }
         .onChange(of: env.moderationRevision) {
             Task {
                 await load()
@@ -174,8 +186,12 @@ struct ReviewThreadView: View {
             }
             .font(.caption)
             .foregroundStyle(Palette.secondaryText)
-            Button("Delete tasting", role: .destructive) { confirmDelete = true }
-                .font(.caption.weight(.semibold))
+            HStack(spacing: 16) {
+                Button { editingItem = review } label: { Label("Edit tasting", systemImage: "pencil") }
+                    .foregroundStyle(Palette.burgundy)
+                Button("Delete tasting", role: .destructive) { confirmDelete = true }
+            }
+            .font(.caption.weight(.semibold))
         }
         .cardSurface()
     }

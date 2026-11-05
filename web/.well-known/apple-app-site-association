@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["X9H68STU8F.com.drewmanley.decant"],
+        "components": [
+          { "/": "/t/*", "comment": "A tasting" },
+          { "/": "/u/*", "comment": "A profile" },
+          { "/": "/w/*", "comment": "A wine" },
+          { "/": "/invite/*", "comment": "An invite code" }
+        ]
+      }
+    ]
+  }
+}

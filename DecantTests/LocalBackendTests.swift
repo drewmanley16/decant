@@ -8,7 +8,7 @@ struct LocalBackendTests {
     private func makeBackend() async throws -> (LocalBackend, Profile) {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("test-\(UUID()).json")
         let backend = LocalBackend(store: LocalStore(fileURL: url))
-        let me = try await backend.startLocalSession(username: "tester", displayName: "Tester")
+        let me = try await backend.startSessionWithSampleCommunity(username: "tester", displayName: "Tester")
         return (backend, me)
     }
 

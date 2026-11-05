@@ -66,6 +66,7 @@ private struct ScanPhaseView: View {
                 .toolbarColorScheme(.dark, for: .navigationBar)
         case .result(let outcome):
             ScanResultView(model: model, outcome: outcome, onIdentified: onIdentified, onManual: onManual)
+                .sensoryFeedback(.success, trigger: true)
         case .noText(let image):
             ScanProblemView(image: image, title: "We couldn't read this label",
                             message: "Try again with the label filling the frame, in good light, or enter the wine manually.",

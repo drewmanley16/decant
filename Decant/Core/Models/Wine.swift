@@ -133,9 +133,12 @@ struct Wine: Codable, Hashable, Sendable, Identifiable {
     var factsSource: InfoSource
     var communityRating: Double?
     var ratingsCount: Int
+    /// True for a catalog row that stands for every vintage of a vintage wine
+    /// (LWIN identifies wines, not vintages). nil/false means `vintage` is exact.
+    var isAnyVintage: Bool? = nil
 
-    var vintageLabel: String { vintage.map(String.init) ?? "NV" }
-    var displayName: String { "\(name) \(vintageLabel)" }
+    var vintageLabel: String { vintage.map(String.init) ?? (isAnyVintage == true ? "Any vintage" : "NV") }
+    var displayName: String { isAnyVintage == true ? name : "\(name) \(vintageLabel)" }
     var producer: String { winery.name }
 
     var locationLine: String {

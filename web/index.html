@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decant</title>
+<meta name="description" content="Decant is a wine diary for you and your friends. Scan a label, rate it, keep your cellar.">
+<meta property="og:title" content="Decant">
+<meta property="og:description" content="A wine diary for you and your friends. Invite-only for now.">
+<meta name="theme-color" content="#4A0F1C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #F7F1EA; --burgundy: #7A1C2E; --deep: #3A0A15; --gold: #C9A46A; --ink: #241A17; --muted: #7C6E66; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+         background: radial-gradient(120% 80% at 50% 0%, #5B1424 0%, var(--deep) 55%, #1A0509 100%);
+         font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+  .card { width: 100%; max-width: 400px; background: var(--cream); border-radius: 28px; padding: 36px 28px 28px;
+          text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+  .mark { letter-spacing: .5em; color: var(--gold); font-weight: 600; font-size: 13px; margin-bottom: 18px; }
+  h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
+  p { color: var(--muted); line-height: 1.5; margin: 0 0 22px; }
+  .code { font: 600 28px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; padding: 16px 0 16px .3em;
+          border: 1.5px dashed var(--gold); border-radius: 16px; margin: 0 0 22px; background: #fff8; }
+  .btn { display: block; text-decoration: none; background: var(--burgundy); color: #fff; font-weight: 600;
+         padding: 16px; border-radius: 999px; margin-bottom: 12px; }
+  .ghost { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="mark">DECANT</div>
+  <h1 id="title">Every great bottle, remembered.</h1>
+  <p id="body">A wine diary for you and your friends. Scan a label, rate it, and keep your cellar.</p>
+  <div id="code" class="code hidden"></div>
+  <a id="open" class="btn" href="decant://">Open in Decant</a>
+  <p style="font-size:14px;margin:6px 0 0">Decant is in private beta on iPhone.</p>
+</main>
+<script>
+  // Universal links open the app directly when it's installed; this page is the fallback.
+  const [, kind, value] = location.pathname.split("/");
+  const safe = (value || "").replace(/[^A-Za-z0-9-]/g, "");
+  const copy = {
+    t: ["A tasting on Decant", "Someone shared a tasting with you. Open it in Decant to see the rating and review."],
+    u: ["A Decant profile", "See their diary, cellar highlights and favourite bottles in Decant."],
+    w: ["A wine on Decant", "See ratings and reviews for this wine in Decant."],
+    invite: ["You're invited to Decant", "Decant is invite-only. Use this code when you sign up."],
+  }[kind];
+  if (copy && safe) {
+    document.getElementById("title").textContent = copy[0];
+    document.getElementById("body").textContent = copy[1];
+    document.getElementById("open").href = `decant://${kind}/${safe}`;
+    if (kind === "invite") {
+      const el = document.getElementById("code");
+      el.textContent = safe.toUpperCase();
+      el.classList.remove("hidden");
+    }
+  }
+</script>
+</body>
+</html>

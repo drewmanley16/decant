@@ -24,7 +24,7 @@ If no Supabase keys are configured, the app runs in **Local Mode**:
 
 - Everything is stored on the device (`Application Support/Decant/local-store.json`).
 - Label identification runs on-device: OCR, a deterministic parser, then catalog matching.
-- A small **simulated sample community** (5 fictional people) is added so you can exercise the feed, likes, comments and friends' ratings. The app labels this clearly in onboarding, on the profile and in Settings. None of it is ever sent to a server.
+- There is no sample or demo content: you start with an empty diary, cellar and feed. (A fictional community exists only as a test fixture in `DecantTests/SampleCommunityFixture.swift`.)
 - The Simulator has no camera. Use **Photos** in the scanner to choose a label photo (`xcrun simctl addmedia booted label.jpg`), or **Manual** entry.
 
 Run the tests:
@@ -91,7 +91,7 @@ Decant/
   Core/
     Models/          Typed domain: Wine (a vintage), Winery, Characteristics, TastingEntry, CellarBottle…
     Services/        Protocols: Auth, WineCatalog, Tasting, Social, Cellar, ScanHistory, Media, RemoteLabelReader
-    Backend/Local/   On-device implementation of every protocol (+ isolated sample community)
+    Backend/Local/   On-device implementation of every protocol 
     Backend/Supabase/ Supabase implementation of every protocol (+ row DTOs)
     Identification/  OCR and perspective crop, label parser, wine lexicon, matcher, identification pipeline
     Logic/           Pure, unit-tested logic: recommendations, statistics, cellar layout and filters
@@ -144,7 +144,7 @@ How the app stays honest about what it knows:
 - The rest of the app never depends on the 3D scene:
   - A 2D shelf view is available as a toggle, and Low Power Mode switches to it automatically.
   - VoiceOver gets a plain bottle list.
-  - Empty cellars show a "Scan your first bottle" state with an optional, clearly labelled sample preview.
+  - Empty cellars show a "Scan your first bottle" state.
 
 ### Security (RLS)
 
@@ -220,4 +220,3 @@ For production, license a provider (for example Wine-Searcher, Global Wine Datab
 - Legal pages (privacy, terms with community guidelines, support) are in `legal/`, ready for GitHub Pages.
 - Safety: age gate and Terms acceptance, Report and Block on every review, comment and profile, and server-side hiding of reported or blocked content (`supabase/migrations/20261028000000_moderation.sql`).
 - Archive: `xcodebuild archive -scheme Decant -configuration Release -destination 'generic/platform=iOS' -allowProvisioningUpdates`, or **Product → Archive** in Xcode.
-- Screenshots: Debug builds accept `-screenshotSeed [-tab cellar|search|profile] [-inspectFirst]` to launch into a populated local store. This code is not compiled into Release builds.

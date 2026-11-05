@@ -30,6 +30,10 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
     private var finish: ShelfFinish?
     private var builtBays = 0
     private var hasFramedContent = false
+    /// False until the first set of bottles has been placed (they cascade in).
+    private var hasPopulated = false
+    /// Until this time the camera eases more slowly, for the opening glide.
+    private var introUntil = Date.distantPast
 
     // Camera rig state (targets are smoothed toward each frame).
     private var yaw: Float = 0, pitch: Float = 0.08, distance: Float = 2.6
@@ -43,6 +47,7 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
     private(set) var inspectedID: UUID?
     private var inspectedHome: (position: SCNVector3, orientation: SCNQuaternion)?
     private(set) var movingID: UUID?
+    private var userTurnedInspected = false
     private var reduceMotion: Bool { UIAccessibility.isReduceMotionEnabled }
 
     override init() {
@@ -73,7 +78,7 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
 
     private func buildEnvironment() {
         scene.lightingEnvironment.contents = CellarTextures.environment()
-        scene.lightingEnvironment.intensity = 0.55
+        scene.lightingEnvironment.intensity = 1.1
         scene.background.contents = UIColor(hex: 0x0E0B0A)
         scene.fogStartDistance = 5
         scene.fogEndDistance = 12
@@ -86,8 +91,10 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         camera.wantsHDR = true
         camera.bloomIntensity = 0.2
         camera.bloomThreshold = 1.2
-        camera.vignettingIntensity = 0.6
-        camera.vignettingPower = 0.8
+        camera.vignettingIntensity = 0.9
+        camera.vignettingPower = 1.1
+        camera.contrast = 0.12
+        camera.saturation = 1.05
         camera.screenSpaceAmbientOcclusionIntensity = 0.7
         camera.screenSpaceAmbientOcclusionRadius = 0.12
         camera.exposureOffset = -0.35
@@ -110,8 +117,8 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         // Warm key light with soft shadows.
         let key = SCNLight()
         key.type = .spot
-        key.intensity = 950
-        key.temperature = 3200
+        key.intensity = 820
+        key.temperature = 3800
         key.spotInnerAngle = 30
         key.spotOuterAngle = 75
         key.castsShadow = true
@@ -125,6 +132,17 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         keyNode.position = SCNVector3(0.6, 3.2, 2.6)
         keyNode.look(at: SCNVector3(0, 1, 0))
         scene.rootNode.addChildNode(keyNode)
+
+        // Cool rim light from behind and above: separates the bottles from the rack.
+        let rim = SCNLight()
+        rim.type = .directional
+        rim.intensity = 420
+        rim.temperature = 5200
+        let rimNode = SCNNode()
+        rimNode.light = rim
+        rimNode.position = SCNVector3(-1.5, 3, -1.5)
+        rimNode.look(at: SCNVector3(0, 0.8, 0.3))
+        scene.rootNode.addChildNode(rimNode)
 
         let fill = SCNLight()
         fill.type = .ambient
@@ -155,7 +173,7 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         wallMaterial.diffuse.wrapS = .repeat
         wallMaterial.diffuse.wrapT = .repeat
         wallMaterial.roughness.contents = 0.95
-        wallMaterial.diffuse.intensity = 0.45
+        wallMaterial.diffuse.intensity = 0.28
         wall.materials = [wallMaterial]
         let wallNode = SCNNode(geometry: wall)
         wallNode.position = SCNVector3(0, 2.5, -Float(CellarAssets.Dim.shelfDepth) / 2 - 0.08)
@@ -180,31 +198,46 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
 
         let byID = Dictionary(uniqueKeysWithValues: bottles.map { ($0.id, $0) })
         for (id, node) in bottleNodes where layout.slots[id] == nil || byID[id] == nil {
-            node.removeFromParentNode()
             bottleNodes[id] = nil
             bottleSignature[id] = nil
             labelTasks[id]?.cancel()
+            animateRemoval(node)
         }
-        for (id, slot) in layout.slots {
+        // Top shelf first, left to right, so the opening cascade reads naturally.
+        let ordered = layout.slots.sorted { a, b in
+            (a.value.shelfInBay, a.value.bay, a.value.slot) < (b.value.shelfInBay, b.value.bay, b.value.slot)
+        }
+        let cascading = !hasPopulated && !ordered.isEmpty
+        for (index, (id, slot)) in ordered.enumerated() {
             guard let bottle = byID[id] else { continue }
             let signature = "\(bottle.wine.id)|\(bottle.wine.labelImagePath ?? "")"
+            let destination = position(for: slot)
             let node: SCNNode
             if let existing = bottleNodes[id], bottleSignature[id] == signature {
                 node = existing
             } else {
-                bottleNodes[id]?.removeFromParentNode()
+                let replaced = bottleNodes[id]
                 node = makeBottleNode(bottle)
                 bottleNodes[id] = node
                 bottleSignature[id] = signature
                 bottleRoot.addChildNode(node)
+                if let replaced {
+                    // Same bottle, new look (e.g. label photo arrived): swap in place.
+                    node.position = replaced.position
+                    node.orientation = replaced.orientation
+                    replaced.removeFromParentNode()
+                } else {
+                    node.position = destination
+                    if !reduceMotion {
+                        animateEntrance(node, delay: cascading ? min(Double(index) * 0.035, 1.1) + 0.15 : 0,
+                                        dramatic: !cascading)
+                    }
+                }
             }
-            if id != inspectedID {
-                let destination = position(for: slot)
+            if id != inspectedID, id != movingID, node.action(forKey: "enter") == nil {
                 if node.position.distance(to: destination) > 0.001 {
-                    if node.parent != nil, !reduceMotion, node.opacity > 0 {
-                        let move = SCNAction.move(to: destination, duration: 0.45)
-                        move.timingMode = .easeInEaseOut
-                        node.runAction(move)
+                    if !reduceMotion, node.opacity > 0 {
+                        animateArc(node, to: destination)
                     } else {
                         node.position = destination
                     }
@@ -215,12 +248,99 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
                 node.runAction(.fadeOpacity(to: targetOpacity, duration: 0.25))
             }
         }
+        if !ordered.isEmpty { hasPopulated = true }
         updateSlotMarkers()
         if !hasFramedContent, !layout.slots.isEmpty {
             hasFramedContent = true
             frameOccupiedShelves(layout)
+            if !reduceMotion {
+                // Open slightly wide and high, then glide in.
+                currentDistance = distance + 1.1
+                currentPitch = pitch + 0.18
+                currentYaw = yaw - 0.22
+                introUntil = Date().addingTimeInterval(1.6)
+            }
         }
         view.setNeedsDisplay()
+    }
+
+    // MARK: - Bottle motion
+
+    /// Drops a bottle onto its shelf: falls in, lands with a small bounce and wobble.
+    private func animateEntrance(_ node: SCNNode, delay: TimeInterval, dramatic: Bool) {
+        let home = node.position
+        let lift: Float = dramatic ? 0.42 : 0.22
+        node.position = SCNVector3(home.x, home.y + lift, home.z + 0.06)
+        node.opacity = 0
+        let fall = SCNAction.move(to: SCNVector3(home.x, home.y, home.z), duration: dramatic ? 0.5 : 0.42)
+        fall.timingMode = .easeIn
+        let land = SCNAction.sequence([
+            .moveBy(x: 0, y: 0.014, z: 0, duration: 0.09),
+            .moveBy(x: 0, y: -0.014, z: 0, duration: 0.1),
+        ])
+        land.timingMode = .easeOut
+        let tilt = CGFloat(Int.random(in: 0...1) == 0 ? 1 : -1) * 0.07
+        let wobble = SCNAction.sequence([
+            .rotateBy(x: 0, y: 0, z: tilt, duration: 0.08),
+            .rotateBy(x: 0, y: 0, z: -tilt * 1.6, duration: 0.12),
+            .rotateBy(x: 0, y: 0, z: tilt * 0.6, duration: 0.1),
+        ])
+        var steps: [SCNAction] = [
+            .wait(duration: delay),
+            .group([fall, .fadeIn(duration: 0.22)]),
+            .group([land, wobble]),
+        ]
+        if dramatic {
+            // A newly added bottle gets a little "here I am" pop.
+            let pop = SCNAction.sequence([.scale(to: 1.08, duration: 0.14), .scale(to: 1, duration: 0.2)])
+            pop.timingMode = .easeInEaseOut
+            steps.append(pop)
+            steps.append(.run { _ in
+                Task { @MainActor in UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+            })
+        }
+        node.runAction(.sequence(steps), forKey: "enter")
+        wake()
+    }
+
+    /// Moves a bottle to a new slot along a lifted arc, leaning into the move.
+    private func animateArc(_ node: SCNNode, to destination: SCNVector3) {
+        node.removeAction(forKey: "arc")
+        let start = node.simdPosition
+        let end = SIMD3<Float>(destination.x, destination.y, destination.z)
+        let travel = simd_length(end - start)
+        let duration = TimeInterval(min(0.75, 0.35 + travel * 0.25))
+        let height = min(0.12, 0.04 + travel * 0.06)
+        let lean = (end.x - start.x) > 0 ? -0.12 : 0.12
+        let baseZ = node.eulerAngles.z
+        let arc = SCNAction.customAction(duration: duration) { n, elapsed in
+            let t = Float(min(1, elapsed / CGFloat(duration)))
+            let e = t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
+            var p = start + (end - start) * e
+            p.y += sin(t * .pi) * height
+            p.z += sin(t * .pi) * 0.05
+            n.simdPosition = p
+            n.eulerAngles.z = baseZ + Float(lean) * sin(t * .pi)
+        }
+        node.runAction(arc, forKey: "arc")
+        wake()
+    }
+
+    /// Lifts a removed bottle off the shelf and fades it away.
+    private func animateRemoval(_ node: SCNNode) {
+        guard !reduceMotion else {
+            node.removeFromParentNode()
+            return
+        }
+        node.removeAllActions()
+        let out = SCNAction.group([
+            .moveBy(x: 0, y: 0.12, z: 0.08, duration: 0.3),
+            .fadeOut(duration: 0.3),
+            .scale(to: 0.85, duration: 0.3),
+        ])
+        out.timingMode = .easeIn
+        node.runAction(.sequence([out, .removeFromParentNode()]))
+        wake()
     }
 
     /// Points the camera at the shelves that actually hold bottles.
@@ -240,9 +360,9 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         let totalWidth = Float(bays) * D.bayStride
         for bay in 0..<bays {
             let bayNode = SCNNode()
-            func box(_ w: Float, _ h: Float, _ d: Float, _ x: Float, _ y: Float, _ z: Float) {
+            func box(_ w: Float, _ h: Float, _ d: Float, _ x: Float, _ y: Float, _ z: Float, material: SCNMaterial? = nil) {
                 let b = SCNBox(width: CGFloat(w), height: CGFloat(h), length: CGFloat(d), chamferRadius: 0.003)
-                b.materials = [wood]
+                b.materials = [material ?? wood]
                 let n = SCNNode(geometry: b)
                 n.position = SCNVector3(x, y, z)
                 bayNode.addChildNode(n)
@@ -253,7 +373,8 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
             box(D.panelThickness, h, D.shelfDepth, D.bayWidth / 2 + D.panelThickness / 2, h / 2, 0)
             box(D.bayWidth + D.panelThickness * 2 + 0.02, D.baseHeight, D.shelfDepth + 0.02, 0, D.baseHeight / 2, 0.005)
             box(D.bayWidth + D.panelThickness * 2 + 0.04, 0.05, D.shelfDepth + 0.04, 0, h + 0.025, 0.01)
-            box(D.bayWidth, h - D.baseHeight, 0.012, 0, D.baseHeight + (h - D.baseHeight) / 2, -D.shelfDepth / 2 + 0.006)
+            box(D.bayWidth, h - D.baseHeight, 0.012, 0, D.baseHeight + (h - D.baseHeight) / 2, -D.shelfDepth / 2 + 0.006,
+                material: assets.backPanelWood(finish))
             for shelf in 0..<CellarLayout.shelvesPerBay {
                 let y = shelfY(shelfInBay: shelf)
                 box(D.bayWidth, D.boardThickness, D.shelfDepth, 0, y - D.boardThickness / 2, 0)
@@ -403,7 +524,7 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
 
     /// Per-frame smoothing toward targets + a gentle idle drift.
     private func step() {
-        let k: Float = 0.14
+        let k: Float = Date() < introUntil ? 0.045 : 0.14
         let idleFor = Date().timeIntervalSince(lastInteraction)
         // Gentle drift for a minute after the last touch, then settle so rendering can pause.
         let idle = idleFor > 4 && idleFor < 60 && inspectedID == nil && movingID == nil && !reduceMotion
@@ -458,6 +579,8 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         let t = g.translation(in: view)
         g.setTranslation(.zero, in: view)
         if let id = inspectedID, let node = bottleNodes[id] {
+            userTurnedInspected = true
+            node.removeAction(forKey: "spin")
             // Rotate the inspected bottle.
             node.eulerAngles.y += Float(t.x) * 0.012
             node.eulerAngles.x = min(max(node.eulerAngles.x + Float(t.y) * 0.006, -0.5), 0.5)
@@ -554,6 +677,15 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         guard let node = bottleNodes[id], inspectedID == nil else { return }
         wake()
         inspectedID = id
+        userTurnedInspected = false
+        if node.action(forKey: "enter") != nil || node.action(forKey: "arc") != nil {
+            // Tapped mid-animation: settle it first so it returns to the right spot.
+            node.removeAllActions()
+            node.opacity = 1
+            node.scale = SCNVector3(1, 1, 1)
+            node.eulerAngles.z = 0
+            if let slot = layout?.slots[id] { node.position = position(for: slot) }
+        }
         inspectedHome = (node.position, node.orientation)
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         // The bottle floats ~1.15 m in front of the camera; keep the camera far enough
@@ -591,7 +723,15 @@ final class CellarSceneController: NSObject, UIGestureRecognizerDelegate {
         fly.timingMode = .easeInEaseOut
         // Identity orientation in camera space = label facing the viewer.
         let turn = SCNAction.rotateTo(x: 0, y: 0, z: 0, duration: duration, usesShortestUnitArc: true)
-        node.runAction(.group([fly, turn]))
+        // Once it arrives, turn slowly on its own until you touch it.
+        let spin = SCNAction.repeatForever(.rotateBy(x: 0, y: .pi * 2, z: 0, duration: 16))
+        node.runAction(.sequence([.group([fly, turn]), .wait(duration: reduceMotion ? 0 : 1.2)])) { [weak self] in
+            Task { @MainActor in
+                guard let self, !self.reduceMotion, let id = self.inspectedID, let node = self.bottleNodes[id],
+                      node.action(forKey: "spin") == nil, !self.userTurnedInspected else { return }
+                node.runAction(spin, forKey: "spin")
+            }
+        }
     }
 
     func endInspection() {

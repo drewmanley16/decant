@@ -1,4 +1,7 @@
+// Test-only fixture: a fictional community for exercising social features.
+// Never shipped in the app.
 import Foundation
+@testable import Decant
 
 /// SAMPLE DATA — Local Mode only.
 /// A small simulated community so the social features (feed, friends' ratings,
@@ -62,5 +65,53 @@ enum LocalSampleCommunity {
         Profile(id: UUID(uuidString: id) ?? UUID(), username: username, displayName: name, avatarURL: nil, bio: bio,
                 isPrivate: isPrivate, favoriteTypes: types, defaultVisibility: .everyone,
                 createdAt: Date(timeIntervalSince1970: 1_700_000_000))
+    }
+}
+
+extension LocalStore {
+    /// Adds the sample community for a newly created local user.
+    static func seedCommunity(into s: inout LocalSnapshot, for me: UUID) {
+        for profile in LocalSampleCommunity.profiles { s.profiles[profile.id] = profile }
+        for index in LocalSampleCommunity.friendIndices {
+            let friend = LocalSampleCommunity.profiles[index].id
+            s.follows.append(.init(follower: me, followee: friend, pending: false))
+            s.follows.append(.init(follower: friend, followee: me, pending: false))
+        }
+        let byName = Dictionary(s.wines.values.map { ($0.name, $0.id) }, uniquingKeysWith: { a, _ in a })
+        var created: [UUID] = []
+        for tasting in LocalSampleCommunity.tastings {
+            guard let wineID = byName[tasting.wineName] else { continue }
+            let date = Calendar.current.date(byAdding: .day, value: -tasting.daysAgo, to: .now) ?? .now
+            let entry = TastingEntry(
+                id: UUID(), userID: LocalSampleCommunity.profiles[tasting.user].id, wineID: wineID,
+                rating: tasting.rating, review: tasting.review, personalNotes: nil, photoPaths: [],
+                consumedOn: date, location: nil, occasion: nil, taggedUserIDs: [], drinkAgain: tasting.rating >= 4,
+                isFavorite: tasting.rating >= 5, visibility: tasting.visibility, createdAt: date,
+                likeCount: 0, commentCount: 0, likedByMe: false
+            )
+            s.entries.append(entry)
+            created.append(entry.id)
+        }
+        for comment in LocalSampleCommunity.comments where comment.tastingIndex < created.count {
+            s.comments.append(.init(id: UUID(), entryID: created[comment.tastingIndex],
+                                    userID: LocalSampleCommunity.profiles[comment.user].id,
+                                    body: comment.body, createdAt: .now.addingTimeInterval(-3600)))
+        }
+        for (i, entryID) in created.enumerated() where i % 3 == 0 {
+            let liker = LocalSampleCommunity.profiles[(i + 1) % LocalSampleCommunity.profiles.count].id
+            s.likes.append(.init(entryID: entryID, userID: liker))
+        }
+        // A welcome follow notification so the inbox isn't empty.
+        s.notifications.append(.init(id: UUID(), recipient: me, actor: LocalSampleCommunity.profiles[0].id,
+                                     kind: .follow, entryID: nil, createdAt: .now, read: false))
+    }
+}
+
+extension LocalBackend {
+    /// Starts a session and populates the fictional community around it.
+    func startSessionWithSampleCommunity(username: String, displayName: String) async throws -> Profile {
+        let me = try await startLocalSession(username: username, displayName: displayName)
+        await store.write { LocalStore.seedCommunity(into: &$0, for: me.id) }
+        return me
     }
 }

@@ -67,7 +67,6 @@ private struct CellarContent: View {
         guard let wineID = env.cellarFocusWineID,
               let bottle = model.inStock.first(where: { $0.wine.id == wineID }) else { return }
         model.mode = .physical
-        model.showsSamplePreview = false
         if uses2D {
             env.cellarFocusWineID = nil
             managedBottle = bottle
@@ -144,6 +143,8 @@ private struct CellarContent: View {
             )
             .ignoresSafeArea(edges: .bottom)
             .accessibilityHidden(true)
+            .sensoryFeedback(.impact(weight: .light), trigger: model.inspectedID) { _, new in new != nil }
+            .sensoryFeedback(.impact(weight: .medium), trigger: model.movingID) { _, new in new != nil }
 
             VStack {
                 if model.movingID != nil {
@@ -156,7 +157,6 @@ private struct CellarContent: View {
                     BottleInspectorCard(
                         bottle: bottle,
                         myRating: model.myRatings[bottle.wine.id],
-                        isSample: model.showsSamplePreview && model.isEmpty,
                         onDetails: { detailWine = bottle.wine },
                         onRate: { ratingWine = bottle.wine },
                         onManage: { managedBottle = bottle },
@@ -229,11 +229,9 @@ private struct CellarContent: View {
 
     private var emptyCard: some View {
         VStack(spacing: 12) {
-            Text(model.showsSamplePreview ? "Sample preview" : "Your cellar awaits")
+            Text("Your cellar awaits")
                 .font(Typo.title3)
-            Text(model.showsSamplePreview
-                 ? "These are sample bottles from the catalog. Scan a bottle to start your own collection."
-                 : "Scan your first bottle and it will appear here with its real label, ready to inspect in 3D.")
+            Text("Scan your first bottle and it will appear here with its real label, ready to inspect in 3D.")
                 .font(.callout)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.75))
@@ -243,14 +241,6 @@ private struct CellarContent: View {
                 Label("Scan your first bottle", systemImage: "viewfinder")
             }
             .buttonStyle(.primary)
-            Button(model.showsSamplePreview ? "Hide sample bottles" : "Preview with sample bottles") {
-                withAnimation(.smooth) {
-                    model.showsSamplePreview.toggle()
-                    model.relayout()
-                }
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.gold)
         }
         .foregroundStyle(.white)
         .padding(20)
@@ -309,7 +299,6 @@ private struct CellarContent: View {
 private struct BottleInspectorCard: View {
     var bottle: CellarBottle
     var myRating: Double?
-    var isSample: Bool
     var onDetails: () -> Void
     var onRate: () -> Void
     var onManage: () -> Void
@@ -342,11 +331,9 @@ private struct BottleInspectorCard: View {
                         StarRatingView(rating: community, size: 13)
                     }
                 }
-                if !isSample {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("In cellar").font(.caption2).foregroundStyle(.white.opacity(0.6))
-                        Text("\(bottle.quantity) bottle\(bottle.quantity == 1 ? "" : "s")").font(.subheadline.weight(.semibold))
-                    }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("In cellar").font(.caption2).foregroundStyle(.white.opacity(0.6))
+                    Text("\(bottle.quantity) bottle\(bottle.quantity == 1 ? "" : "s")").font(.subheadline.weight(.semibold))
                 }
                 if let window = bottle.wine.drinkingWindow {
                     VStack(alignment: .leading, spacing: 2) {
@@ -358,7 +345,7 @@ private struct BottleInspectorCard: View {
             HStack(spacing: 10) {
                 Button("Details", action: onDetails).buttonStyle(.primary)
                 actionIcon("star", "Rate", onRate)
-                if !isSample { actionIcon("slider.horizontal.3", "Manage bottle", onManage) }
+                actionIcon("slider.horizontal.3", "Manage bottle", onManage)
                 actionIcon("square.and.arrow.up", "Share", onShare)
             }
             Text("Drag to rotate · Pinch to zoom")
@@ -400,7 +387,7 @@ struct Cellar2DGrid: View {
 
     var body: some View {
         ScrollView {
-            if model.isEmpty && !model.showsSamplePreview {
+            if model.isEmpty {
                 EmptyStateView(symbol: "square.stack.3d.up", title: "Your cellar awaits",
                                message: "Scan a bottle to add it to your cellar.", actionTitle: "Scan a bottle") {
                     env.isScannerPresented = true

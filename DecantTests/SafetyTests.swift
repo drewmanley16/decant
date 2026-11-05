@@ -6,7 +6,7 @@ import Testing
 struct SafetyTests {
     private func makeBackend() async throws -> LocalBackend {
         let backend = LocalBackend(store: LocalStore(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("safety-\(UUID()).json")))
-        _ = try await backend.startLocalSession(username: "safety", displayName: "Safety")
+        _ = try await backend.startSessionWithSampleCommunity(username: "safety", displayName: "Safety")
         return backend
     }
 

@@ -8,3 +8,8 @@ supabase/.env
 supabase/functions/.env
 supabase/.temp/
 .build/
+
+# LWIN importer output (large, regenerated from the Liv-ex download)
+supabase/lwin/out/
+supabase/.branches/
+supabase/.temp/

@@ -133,3 +133,12 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 extension ButtonStyle where Self == SecondaryButtonStyle {
     static var secondary: SecondaryButtonStyle { SecondaryButtonStyle() }
 }
+
+/// Subtle press-down for tappable cards.
+struct PressableCardStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+    }
+}

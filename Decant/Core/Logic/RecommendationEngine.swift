@@ -34,7 +34,10 @@ struct RecommendationEngine: Sendable {
         if !similar.isEmpty {
             result.append(.init(kind: .similar, title: "Because you loved…", subtitle: "Matched on grape, region and style", wines: similar))
         }
-        result.append(.init(kind: .trending, title: "Trending", subtitle: "Most rated by the community", wines: trending()))
+        let trending = trending()
+        if !trending.isEmpty {
+            result.append(.init(kind: .trending, title: "Trending", subtitle: "Most rated by the community", wines: trending))
+        }
         let value = highlyRated(under: 25)
         if !value.isEmpty {
             result.append(.init(kind: .value, title: "Highly rated under $25", subtitle: "Great bottles, gentle prices", wines: value))
@@ -83,7 +86,9 @@ struct RecommendationEngine: Sendable {
     }
 
     func trending(limit: Int = 10) -> [Wine] {
+        // Only wines people have actually rated; an unrated wine isn't trending.
         catalog
+            .filter { $0.ratingsCount > 0 && $0.communityRating != nil }
             .sorted { lhs, rhs in
                 let l = Double(lhs.ratingsCount) * (lhs.communityRating ?? 0)
                 let r = Double(rhs.ratingsCount) * (rhs.communityRating ?? 0)
@@ -95,7 +100,7 @@ struct RecommendationEngine: Sendable {
 
     func highlyRated(under maxPrice: Double, limit: Int = 10) -> [Wine] {
         catalog
-            .filter { ($0.price?.doubleValue ?? .infinity) <= maxPrice }
+            .filter { ($0.price?.doubleValue ?? .infinity) <= maxPrice && $0.ratingsCount > 0 && ($0.communityRating ?? 0) >= 3.5 }
             .sorted { ($0.communityRating ?? 0, $0.ratingsCount) > ($1.communityRating ?? 0, $1.ratingsCount) }
             .prefix(limit)
             .map { $0 }

@@ -10,12 +10,22 @@ struct Profile: Codable, Hashable, Sendable, Identifiable {
     var favoriteTypes: [WineType]
     var defaultVisibility: Visibility
     var createdAt: Date
+    /// When this account joined with an invite code. Nil = signed up but not yet invited.
+    var memberSince: Date? = nil
 
     var initials: String {
         let parts = displayName.split(separator: " ").prefix(2)
         let letters = parts.compactMap(\.first).map(String.init).joined()
         return letters.isEmpty ? String(username.prefix(1)).uppercased() : letters.uppercased()
     }
+}
+
+/// Your personal invite code and how many people have used it.
+struct InviteStatus: Hashable, Sendable {
+    var code: String
+    var maxUses: Int
+    var used: Int
+    var remaining: Int { max(0, maxUses - used) }
 }
 
 /// Who can see a review / tasting entry. Matches the `visibility` Postgres enum.

@@ -271,6 +271,7 @@ struct AddToCellarSheet: View {
             .task { collections = (try? await env.cellar.collections()) ?? [] }
         }
         .presentationDetents([.large])
+        .sensoryFeedback(.error, trigger: error) { _, new in new != nil }
     }
 
     private func save() async {
@@ -279,6 +280,7 @@ struct AddToCellarSheet: View {
         do {
             _ = try await env.cellar.addBottle(wineID: wine.id, draft: draft)
             env.cellarRevision += 1
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             env.show("Added to your cellar", symbol: "square.stack.3d.up.fill")
             dismiss()
         } catch {

@@ -120,8 +120,10 @@ private struct WineDetailContent: View {
             HStack(alignment: .center, spacing: 18) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(wine.communityRating.map { $0.formatted(.number.precision(.fractionLength(1))) } ?? "–")
-                            .font(.system(size: 40, weight: .semibold, design: .serif))
+                        if let rating = wine.communityRating {
+                            Text(rating.formatted(.number.precision(.fractionLength(1))))
+                                .font(.system(size: 40, weight: .semibold, design: .serif))
+                        }
                         StarRatingView(rating: wine.communityRating ?? 0, size: 15)
                     }
                     Text(wine.ratingsCount == 0 ? "No ratings yet" : "\(wine.ratingsCount) rating\(wine.ratingsCount == 1 ? "" : "s")")

@@ -77,6 +77,7 @@ struct WineCatalogRow: Decodable {
     var pairings: [String]
     var avgRating: Double?
     var ratingsCount: Int
+    var vintageConfig: String?
 
     var wine: Wine {
         let winery = Winery(id: wineryId, name: wineryName, country: wineryCountry, region: wineryRegion,
@@ -98,7 +99,8 @@ struct WineCatalogRow: Decodable {
             price: priceEstimate.map { Price(amount: Decimal($0), currency: currency) },
             labelImagePath: labelImagePath, bottleImagePath: bottleImagePath, drinkFrom: drinkFrom, drinkUntil: drinkUntil,
             characteristics: profile, pairings: pairings, factsSource: factsSource,
-            communityRating: avgRating, ratingsCount: ratingsCount
+            communityRating: avgRating, ratingsCount: ratingsCount,
+            isAnyVintage: year == nil && vintageConfig == "vintage"
         )
     }
 }
@@ -115,11 +117,13 @@ struct ProfileRow: Codable {
     var cellarFinish: String?
     var cellarSort: String?
     var createdAt: Date
+    var memberSince: Date?
 
     var profile: Profile {
         Profile(id: id, username: username, displayName: displayName.isEmpty ? username : displayName,
                 avatarURL: avatarUrl.flatMap(URL.init(string:)), bio: bio, isPrivate: isPrivate,
-                favoriteTypes: favoriteTypes, defaultVisibility: defaultVisibility, createdAt: createdAt)
+                favoriteTypes: favoriteTypes, defaultVisibility: defaultVisibility, createdAt: createdAt,
+                memberSince: memberSince)
     }
 }
 
@@ -136,6 +140,18 @@ struct ProfileUpdate: Encodable {
         case username, bio
         case displayName = "display_name", isPrivate = "is_private", favoriteTypes = "favorite_types"
         case defaultVisibility = "default_visibility", avatarUrl = "avatar_url"
+    }
+
+    // Always send bio and avatar, so clearing them writes null instead of being skipped.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(username, forKey: .username)
+        try c.encode(displayName, forKey: .displayName)
+        try c.encode(bio, forKey: .bio)
+        try c.encode(isPrivate, forKey: .isPrivate)
+        try c.encode(favoriteTypes, forKey: .favoriteTypes)
+        try c.encode(defaultVisibility, forKey: .defaultVisibility)
+        try c.encode(avatarUrl, forKey: .avatarUrl)
     }
 }
 

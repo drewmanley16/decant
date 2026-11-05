@@ -105,7 +105,6 @@ final class LocalBackend: AuthService, WineCatalogService, TastingService, Socia
                                   defaultVisibility: .everyone, createdAt: .now)
             s.profiles[profile.id] = profile
             s.currentUserID = profile.id
-            LocalStore.seedCommunity(into: &s, for: profile.id)
             return profile
         }
     }
@@ -126,6 +125,21 @@ final class LocalBackend: AuthService, WineCatalogService, TastingService, Socia
 
     func signOut() async throws {
         await store.write { $0.currentUserID = nil }
+    }
+
+    // Local Mode has no other people to invite, so everyone is a member.
+    func checkInvite(_ code: String) async throws -> Bool { true }
+
+    func redeemInvite(_ code: String) async throws -> Profile {
+        guard let profile = await restoreSession() else { throw AppError.notSignedIn }
+        return profile
+    }
+
+    func myInvite() async throws -> InviteStatus {
+        let id = try await me()
+        let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+        let code = String(id.uuidString.utf8.prefix(6).map { alphabet[Int($0) % alphabet.count] })
+        return InviteStatus(code: code, maxUses: 5, used: 0)
     }
 
     func recordTermsAcceptance() async {}

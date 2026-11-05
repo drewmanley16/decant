@@ -87,12 +87,24 @@ struct RatingPill: View {
     var count: Int?
 
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "star.fill").font(.caption2).foregroundStyle(Palette.gold)
-            Text(rating.map { $0.formatted(.number.precision(.fractionLength(1))) } ?? "–")
-                .font(.caption.weight(.semibold).monospacedDigit())
-            if let count, count > 0 {
-                Text("(\(count))").font(.caption2).foregroundStyle(Palette.secondaryText)
+        Group {
+            if let rating {
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill").font(.caption2).foregroundStyle(Palette.gold)
+                    Text(rating.formatted(.number.precision(.fractionLength(1))))
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                    if let count, count > 0 {
+                        Text("(\(count))").font(.caption2).foregroundStyle(Palette.secondaryText)
+                    }
+                }
+            } else {
+                Text("Unrated")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Palette.secondaryText)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Palette.hairline.opacity(0.6), in: Capsule())
+                    .accessibilityLabel("No ratings yet")
             }
         }
         .accessibilityElement(children: .combine)

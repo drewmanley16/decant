@@ -33,6 +33,7 @@ struct WineCard: View {
             .frame(height: 150)
             .frame(maxWidth: .infinity)
             .background(Palette.cream.opacity(0.6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(wine.name)
