@@ -30,6 +30,7 @@
 		4B96DFF585A7D6A0EA4588F7 /* DecantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40BA674234C7FEDB4C077AB /* DecantApp.swift */; };
 		4C76A715DC04D252369CAE0E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEF96219EB765BFD06DD6C /* SettingsView.swift */; };
 		4D123CE4B610F42852AE270C /* CellarSceneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD371BB56D5AF40B210F5567 /* CellarSceneController.swift */; };
+		50F68928B27E43E59B6EB3ED /* DeepLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448DD78043B09900A804D268 /* DeepLinkTests.swift */; };
 		6D8541D5794CEE0E2BD3C74F /* SeedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 716DB44A7BC2587A688C5135 /* SeedCatalog.swift */; };
 		78675BB5C06DBB0ADD56FCC9 /* WineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F9C8ADCC7BD7FB6CE86235 /* WineDetailView.swift */; };
 		795761E06115502F87179568 /* StatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0F6DF7DEA2FF198DACC9F61 /* StatsCalculator.swift */; };
@@ -43,11 +44,13 @@
 		93B3CF2B72628FF75FC21B73 /* ScanFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBF4C9B0CCFDA3578CAA490 /* ScanFlowView.swift */; };
 		94B4493E707A4CE52CF7FF5B /* CellarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A886BEF26113F99D763FB5E /* CellarSceneView.swift */; };
 		951B570A12BB0CBA2EF4E4EA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 590B252BF98CB0E5DA044119 /* Theme.swift */; };
+		97D5427581027DDBCA803406 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D611B2DE376D5D63B08D87 /* AppDelegate.swift */; };
 		9C685F7F9DC7A9311B7289AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4732694B08E709C2556B51CD /* PrivacyInfo.xcprivacy */; };
 		9EC7365A4DEEA6797E9B83F0 /* WineMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED85487825E588A9B60B8946 /* WineMatcher.swift */; };
 		A27B9B96EE9F89429974238A /* Routing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31394B18081FDF62C9E00408 /* Routing.swift */; };
 		A684ED17735CC98B07C2D68E /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC3415E351134EDD5C91EBB4 /* AppEnvironment.swift */; };
 		A75073C09137B9A76B636821 /* LabelImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3C6AA503B553F98AD47E69C /* LabelImageProcessor.swift */; };
+		A7C3292318DEFB121DEC81F8 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B507CD3AD4E3FD70A0D2D1 /* DeepLink.swift */; };
 		A83B4B6055EA5F4F03A315B7 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = C9F21EFCADF34674FF35A782 /* Supabase */; };
 		AAE7141E0B72E82B43646DE4 /* WineDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5BC606AAAEC9D1CAD3CEB4 /* WineDetailViewModel.swift */; };
 		AB29267BB1B41BE5646BCD26 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61FA86D75E12153143E01EF /* ScanResultView.swift */; };
@@ -96,6 +99,7 @@
 		31394B18081FDF62C9E00408 /* Routing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing.swift; sourceTree = "<group>"; };
 		32D288061BB9E756AF4D689F /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		36F9C8ADCC7BD7FB6CE86235 /* WineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineDetailView.swift; sourceTree = "<group>"; };
+		448DD78043B09900A804D268 /* DeepLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkTests.swift; sourceTree = "<group>"; };
 		4732694B08E709C2556B51CD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4A886BEF26113F99D763FB5E /* CellarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarSceneView.swift; sourceTree = "<group>"; };
 		4CB903EA80EA3BD5E4807C7C /* CellarSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarSheets.swift; sourceTree = "<group>"; };
@@ -111,6 +115,7 @@
 		70036433258AE797127ED447 /* SupabaseRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseRows.swift; sourceTree = "<group>"; };
 		716DB44A7BC2587A688C5135 /* SeedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedCatalog.swift; sourceTree = "<group>"; };
 		72AF9C3019A3EB8620690C2C /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
+		74D611B2DE376D5D63B08D87 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8C293C7C0C6A8FC34F458BE7 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
 		9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDecodingTests.swift; sourceTree = "<group>"; };
 		96D3BAF20C6F7BED737FB96D /* SafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyTests.swift; sourceTree = "<group>"; };
@@ -126,6 +131,7 @@
 		BE479F3452337478B040F8F0 /* WineIdentificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineIdentificationService.swift; sourceTree = "<group>"; };
 		BF8DBB2F865BE4B5C10F0CAB /* CellarAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarAssets.swift; sourceTree = "<group>"; };
 		C40D89E19451721429B5F044 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C6B507CD3AD4E3FD70A0D2D1 /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		C7F6C06A7FCFB7ED7255B36D /* Safety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Safety.swift; sourceTree = "<group>"; };
 		C8E40BCE83002A25CB3ECF47 /* LocalBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBackendTests.swift; sourceTree = "<group>"; };
 		CB177B5DE67329E8B67B8CA2 /* SeedCatalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = SeedCatalog.json; sourceTree = "<group>"; };
@@ -234,6 +240,7 @@
 		5DE8225B98FF6CAC9AE59099 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				74D611B2DE376D5D63B08D87 /* AppDelegate.swift */,
 				EC3415E351134EDD5C91EBB4 /* AppEnvironment.swift */,
 				F40BA674234C7FEDB4C077AB /* DecantApp.swift */,
 				D916A00CB33723CB1D3F07EB /* MainTabView.swift */,
@@ -245,6 +252,7 @@
 			isa = PBXGroup;
 			children = (
 				E7DF0D49E3CB73D2FE5D2416 /* CellarLayout.swift */,
+				C6B507CD3AD4E3FD70A0D2D1 /* DeepLink.swift */,
 				2FA66F3F22417E8D40128E94 /* RecommendationEngine.swift */,
 				D0F6DF7DEA2FF198DACC9F61 /* StatsCalculator.swift */,
 			);
@@ -293,6 +301,7 @@
 		6CAFA83D1FE1D7B05E404467 /* DecantTests */ = {
 			isa = PBXGroup;
 			children = (
+				448DD78043B09900A804D268 /* DeepLinkTests.swift */,
 				0301ED5877DD95536F1A97C8 /* IdentificationTests.swift */,
 				C8E40BCE83002A25CB3ECF47 /* LocalBackendTests.swift */,
 				A0A91FC0C99730C95C6290A5 /* LogicTests.swift */,
@@ -566,6 +575,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97D5427581027DDBCA803406 /* AppDelegate.swift in Sources */,
 				A684ED17735CC98B07C2D68E /* AppEnvironment.swift in Sources */,
 				00E9C632D618F5FCA60A5889 /* BottleArt.swift in Sources */,
 				D2EBE73A3444A2B20F381C10 /* Cellar.swift in Sources */,
@@ -578,6 +588,7 @@
 				111F2210A0809736EBBDF458 /* CellarViewModel.swift in Sources */,
 				41F8246C4CE1231ABB465944 /* Components.swift in Sources */,
 				4B96DFF585A7D6A0EA4588F7 /* DecantApp.swift in Sources */,
+				A7C3292318DEFB121DEC81F8 /* DeepLink.swift in Sources */,
 				3D34C53C684F0DE7DFAFFF76 /* DiscoverView.swift in Sources */,
 				34DF2B212B0758653C7E8B87 /* EditProfileView.swift in Sources */,
 				B96C67C6B3266992D30CA8AC /* ImageLoader.swift in Sources */,
@@ -624,6 +635,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50F68928B27E43E59B6EB3ED /* DeepLinkTests.swift in Sources */,
 				1A8D338C9B0234F28D33CDB4 /* IdentificationTests.swift in Sources */,
 				CAE90B19D24F3C532E6AD6E2 /* LocalBackendTests.swift in Sources */,
 				197D57B4D70DD6D6E3478D35 /* LogicTests.swift in Sources */,

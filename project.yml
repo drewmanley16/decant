@@ -36,6 +36,8 @@ targets:
       path: Decant/Resources/Decant.entitlements
       properties:
         com.apple.developer.applesignin: [Default]
+        com.apple.developer.associated-domains: ["applinks:decant-diary.vercel.app"]
+        aps-environment: development
     info:
       path: Decant/Resources/Info.plist
       properties:
@@ -52,6 +54,9 @@ targets:
         SupabaseURL: $(SUPABASE_URL)
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
         ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.drewmanley.decant
+            CFBundleURLSchemes: [decant]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.drewmanley.decant

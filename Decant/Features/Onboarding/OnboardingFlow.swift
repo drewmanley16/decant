@@ -637,7 +637,17 @@ private struct InviteStep: View {
         .sensoryFeedback(.error, trigger: attempts)
         .task {
             try? await Task.sleep(for: .seconds(0.6))
-            focused = true
+            if let link = env.pendingInviteCode, code.isEmpty {
+                env.pendingInviteCode = nil
+                code = link // redeems automatically once six characters are in
+            } else {
+                focused = true
+            }
+        }
+        .onChange(of: env.pendingInviteCode) { _, link in
+            guard let link else { return }
+            env.pendingInviteCode = nil
+            code = link
         }
     }
 

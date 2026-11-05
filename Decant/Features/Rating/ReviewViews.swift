@@ -149,9 +149,18 @@ struct ReviewThreadView: View {
             RateWineView(wine: review.wine, editing: review.entry)
         }
         .toolbar {
-            if case .loaded(let review) = item, review.author.id == env.currentUser?.id {
+            if case .loaded(let review) = item {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Edit") { editingItem = review }
+                    ShareLink(item: DeepLink.entry(review.id).url,
+                              message: Text("\(review.author.displayName) on \(review.wine.displayName)")) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("Share tasting")
+                }
+                if review.author.id == env.currentUser?.id {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Edit") { editingItem = review }
+                    }
                 }
             }
         }

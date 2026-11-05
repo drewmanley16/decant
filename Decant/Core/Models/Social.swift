@@ -129,7 +129,7 @@ struct ReviewComment: Codable, Hashable, Sendable, Identifiable {
 }
 
 enum NotificationKind: String, Codable, Sendable {
-    case follow, like, comment, tag
+    case follow, like, comment, tag, inviteJoined
 }
 
 struct AppNotification: Hashable, Sendable, Identifiable {
@@ -147,6 +147,7 @@ struct AppNotification: Hashable, Sendable, Identifiable {
         case .like: "liked your review\(wineName.map { " of \($0)" } ?? "")"
         case .comment: "commented on your review\(wineName.map { " of \($0)" } ?? "")"
         case .tag: "tagged you in a tasting\(wineName.map { " of \($0)" } ?? "")"
+        case .inviteJoined: "joined Decant with your invite"
         }
     }
 }

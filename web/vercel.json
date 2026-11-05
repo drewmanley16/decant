@@ -1,10 +1,10 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/t/:id", "destination": "/index.html" },
-    { "source": "/u/:id", "destination": "/index.html" },
-    { "source": "/w/:id", "destination": "/index.html" },
-    { "source": "/invite/:code", "destination": "/index.html" }
+    { "source": "/t/:id", "destination": "/" },
+    { "source": "/u/:id", "destination": "/" },
+    { "source": "/w/:id", "destination": "/" },
+    { "source": "/invite/:code", "destination": "/" }
   ],
   "headers": [
     {

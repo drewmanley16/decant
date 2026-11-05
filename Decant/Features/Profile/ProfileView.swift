@@ -17,6 +17,14 @@ struct ProfileView: View {
                     NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
                         .accessibilityLabel("Settings")
                 }
+                if let me = env.currentUser {
+                    ToolbarItem(placement: .topBarLeading) {
+                        ShareLink(item: DeepLink.user(me.id).url, message: Text("My wine diary on Decant")) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Share profile")
+                    }
+                }
             }
             .appDestinations()
         }
@@ -37,6 +45,7 @@ struct UserProfileView: View {
                 if userID != env.currentUser?.id {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
+                            ShareLink(item: DeepLink.user(userID).url) { Label("Share profile", systemImage: "square.and.arrow.up") }
                             Button { reporting = true } label: { Label("Report account", systemImage: "flag") }
                             Button(role: .destructive) { confirmBlock = true } label: { Label("Block", systemImage: "hand.raised") }
                         } label: { Image(systemName: "ellipsis.circle") }
@@ -362,7 +371,8 @@ private struct InviteCard: View {
                 }
                 .buttonStyle(PressableCardStyle())
                 .accessibilityLabel("Copy invite code \(invite.code.map(String.init).joined(separator: " "))")
-                ShareLink(item: "Join me on Decant, the wine diary. My invite code is \(invite.code).") {
+                ShareLink(item: DeepLink.invite(invite.code).url,
+                          message: Text("Join me on Decant, the wine diary. My invite code is \(invite.code).")) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.headline)
                         .foregroundStyle(.white)
@@ -478,6 +488,7 @@ struct NotificationsView: View {
         .task {
             await load()
             try? await env.social.markNotificationsRead()
+            env.setBadge(0)
         }
     }
 

@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import UserNotifications
 
 /// Build-time configuration read from Info.plist (populated from Config/*.xcconfig).
 struct AppConfig: Sendable {
@@ -66,6 +67,11 @@ final class AppEnvironment {
     /// Bumped after a block/report so feeds and threads drop hidden content.
     var moderationRevision = 0
     var toast: Toast?
+    /// A link opened from outside (share link or notification), shown over the tabs.
+    var pendingLink: DeepLink?
+    /// An invite code from a link, pre-filled on the invite step.
+    var pendingInviteCode: String?
+    @ObservationIgnored private var pushToken: String?
 
     @ObservationIgnored
     @AppStorage("onboardingComplete") private var onboardingComplete = false
@@ -112,6 +118,55 @@ final class AppEnvironment {
     func bootstrap() async {
         currentUser = await auth.restoreSession()
         phase = currentUser != nil && onboardingComplete && !needsInvite ? .ready : .onboarding
+        if phase == .ready { await registerForPushIfAllowed() }
+    }
+
+    // MARK: Links
+
+    func open(_ url: URL) {
+        guard let link = DeepLink(url: url) else { return }
+        if case .invite(let code) = link {
+            if phase == .ready {
+                show(needsInvite ? "Invite code ready" : "You're already a member", symbol: "envelope.open.fill")
+            }
+            pendingInviteCode = code
+            return
+        }
+        guard phase == .ready else { return }
+        pendingLink = link
+    }
+
+    // MARK: Push notifications
+
+    /// Asks for permission (once), then registers with APNs.
+    func requestPushPermission() async {
+        guard mode == .supabase else { return }
+        let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])) ?? false
+        if granted { UIApplication.shared.registerForRemoteNotifications() }
+    }
+
+    func registerForPushIfAllowed() async {
+        guard mode == .supabase, currentUser != nil else { return }
+        switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+        case .authorized, .provisional, .ephemeral: UIApplication.shared.registerForRemoteNotifications()
+        default: break
+        }
+    }
+
+    func didReceivePushToken(_ token: Data) {
+        let hex = token.map { String(format: "%02x", $0) }.joined()
+        pushToken = hex
+        guard currentUser != nil else { return }
+        #if DEBUG
+        let sandbox = true
+        #else
+        let sandbox = false
+        #endif
+        Task { try? await social.registerDevice(token: hex, sandbox: sandbox) }
+    }
+
+    func setBadge(_ count: Int) {
+        UNUserNotificationCenter.current().setBadgeCount(count)
     }
 
     func didSignIn(_ profile: Profile) {
@@ -121,9 +176,12 @@ final class AppEnvironment {
     func finishOnboarding() {
         onboardingComplete = true
         withAnimation(.smooth) { phase = .ready }
+        Task { await requestPushPermission() }
     }
 
     func signOut() async {
+        if let pushToken { try? await social.unregisterDevice(token: pushToken) }
+        setBadge(0)
         try? await auth.signOut()
         currentUser = nil
         onboardingComplete = false

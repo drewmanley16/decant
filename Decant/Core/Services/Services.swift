@@ -81,6 +81,8 @@ protocol SocialService: Sendable {
     func addComment(_ body: String, entryID: UUID) async throws -> ReviewComment
     func notifications() async throws -> [AppNotification]
     func markNotificationsRead() async throws
+    func registerDevice(token: String, sandbox: Bool) async throws
+    func unregisterDevice(token: String) async throws
     // Safety (App Store Guideline 1.2)
     func block(_ userID: UUID) async throws
     func unblock(_ userID: UUID) async throws

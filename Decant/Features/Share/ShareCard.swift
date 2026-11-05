@@ -140,7 +140,7 @@ struct ShareWineSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .sheet(isPresented: $showActivity) {
-                if let image { ActivityView(items: [image, "\(wine.displayName) on Decant"]) }
+                if let image { ActivityView(items: [image, "\(wine.displayName) on Decant", DeepLink.wine(wine.id).url]) }
             }
             .task {
                 image = await ShareCardRenderer.render(wine: wine, rating: rating, review: review, author: env.currentUser)

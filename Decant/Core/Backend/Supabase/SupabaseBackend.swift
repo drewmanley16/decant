@@ -618,12 +618,22 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
                 case "like": .like
                 case "comment": .comment
                 case "tag": .tag
+                case "invite_joined": .inviteJoined
                 default: .follow
                 }
                 return AppNotification(id: r.id, kind: kind, actor: actor, entryID: r.entryId, wineName: nil,
                                        createdAt: r.createdAt, isRead: r.readAt != nil)
             }
         }
+    }
+
+    func registerDevice(token: String, sandbox: Bool) async throws {
+        struct Params: Encodable { var p_token: String; var p_sandbox: Bool }
+        try await run { try await client.rpc("register_device", params: Params(p_token: token, p_sandbox: sandbox)).execute() }
+    }
+
+    func unregisterDevice(token: String) async throws {
+        try await run { try await client.rpc("unregister_device", params: ["p_token": token]).execute() }
     }
 
     func markNotificationsRead() async throws {

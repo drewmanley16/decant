@@ -475,6 +475,10 @@ final class LocalBackend: AuthService, WineCatalogService, TastingService, Socia
         }
     }
 
+    // Local Mode has no server to push from.
+    func registerDevice(token: String, sandbox: Bool) async throws {}
+    func unregisterDevice(token: String) async throws {}
+
     func markNotificationsRead() async throws {
         let viewer = try await me()
         await store.write { s in

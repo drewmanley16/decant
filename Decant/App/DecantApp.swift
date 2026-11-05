@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct DecantApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var env = AppEnvironment.live()
 
     init() {
@@ -31,7 +32,11 @@ struct DecantApp: App {
             RootView()
                 .environment(env)
                 .tint(Palette.burgundy)
-                .task { await env.bootstrap() }
+                .task {
+                    AppDelegate.environment = env
+                    await env.bootstrap()
+                }
+                .onOpenURL { env.open($0) }
         }
     }
 }

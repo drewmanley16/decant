@@ -38,6 +38,32 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $env.isScannerPresented) {
             ScanFlowView()
         }
+        .sheet(item: $env.pendingLink) { link in
+            DeepLinkSheet(link: link)
+        }
+    }
+}
+
+/// Shows whatever a shared link or notification points at, over the current tab.
+private struct DeepLinkSheet: View {
+    var link: DeepLink
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                switch link.route {
+                case .entry(let id): ReviewThreadView(entryID: id)
+                case .user(let id): UserProfileView(userID: id)
+                case .wineID(let id): WineDetailLoader(id: id)
+                default: EmptyView()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+            }
+            .appDestinations()
+        }
     }
 }
 
