@@ -375,12 +375,17 @@ private struct CellarPreviewStep: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Color(red: 0.055, green: 0.043, blue: 0.039)
+                LinearGradient(colors: [CellarWallStyle.wall, CellarWallStyle.wallDeep], startPoint: .top, endPoint: .bottom)
                 if !bottles.isEmpty {
-                    CellarSceneView(bottles: bottles, layout: CellarLayout(bottles: bottles, saved: [], sort: .type),
-                                    finish: .walnut, dimmed: [], onInspect: { _ in }, onMove: { _, _ in }, onBeginMove: { _ in })
-                        .accessibilityHidden(true)
-                        .transition(.opacity)
+                    let wall = CellarWall(bottles: bottles, sort: .recent)
+                    VStack(spacing: 26) {
+                        ForEach(wall.shelves.prefix(2)) { shelf in
+                            PreviewShelf(wines: shelf.bottles.map(\.wine))
+                        }
+                    }
+                    .padding(.top, 60)
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -388,7 +393,7 @@ private struct CellarPreviewStep: View {
             VStack(spacing: 14) {
                 Text("Cellar").eyebrow().entrance(0)
                 Text("Your personal wine museum").font(Typo.title2).multilineTextAlignment(.center).entrance(1)
-                Text("Every bottle you scan lands on a real 3D shelf with its own label. Spin it, inspect it, rearrange your racks.")
+                Text("Every bottle you scan lands on your shelves with its own label. Tap one to turn it in your hand in 3D.")
                     .font(.callout).foregroundStyle(Palette.secondaryText).multilineTextAlignment(.center).entrance(2)
                 Button("Continue", action: next).buttonStyle(.primary).padding(.top, 6).entrance(3)
             }
@@ -404,6 +409,29 @@ private struct CellarPreviewStep: View {
                              collectionID: nil, addedAt: .now.addingTimeInterval(Double(index)), consumedCount: 0)
             }
         }
+    }
+}
+
+/// A shelf of studio-rendered bottles, for the cellar onboarding illustration.
+private struct PreviewShelf: View {
+    var wines: [Wine]
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Rectangle()
+                .fill(LinearGradient(colors: [CellarWallStyle.wood(.walnut), CellarWallStyle.wood(.walnut).mix(with: .black, by: 0.45)],
+                                     startPoint: .top, endPoint: .bottom))
+                .frame(height: 12)
+                .shadow(color: .black.opacity(0.55), radius: 10, y: 8)
+                .padding(.horizontal, 10)
+            HStack(alignment: .bottom, spacing: 2) {
+                ForEach(wines.prefix(6), id: \.id) { wine in
+                    BottleRender(wine: wine, height: 150)
+                }
+            }
+            .padding(.bottom, 10)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

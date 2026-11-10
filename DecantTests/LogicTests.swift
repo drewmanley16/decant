@@ -116,46 +116,32 @@ struct RecommendationTests {
     }
 }
 
-@Suite("Cellar layout")
-struct CellarLayoutTests {
-    @Test func fillsSlotsAndHidesEmptyBottles() {
-        let bottles = (0..<10).map { Fixtures.bottle(Fixtures.catalog[$0], addedSecondsAgo: Double(100 - $0)) }
-            + [Fixtures.bottle(Fixtures.catalog[10], quantity: 0)]
-        let layout = CellarLayout(bottles: bottles, saved: [], sort: .manual)
-        #expect(layout.slots.count == 10)
-        #expect(Set(layout.slots.values).count == 10)
-        #expect(layout.shelfCount == CellarLayout.shelvesPerBay)
-        #expect(layout.slots[bottles[0].id] == CellarLayout.Slot(shelf: 0, slot: 0)) // oldest first
-    }
-
-    @Test func honorsSavedPlacementsAndIgnoresConflicts() {
-        let a = Fixtures.bottle(Fixtures.catalog[0]), b = Fixtures.bottle(Fixtures.catalog[1])
-        let saved = [CellarPlacement(bottleID: a.id, shelf: 3, slot: 5), CellarPlacement(bottleID: b.id, shelf: 3, slot: 5)]
-        let layout = CellarLayout(bottles: [a, b], saved: saved, sort: .manual)
-        #expect(layout.slots[a.id] == CellarLayout.Slot(shelf: 3, slot: 5))
-        #expect(layout.slots[b.id] != CellarLayout.Slot(shelf: 3, slot: 5))
-    }
-
-    @Test func moveSwapsOccupants() {
-        let a = Fixtures.bottle(Fixtures.catalog[0], addedSecondsAgo: 2), b = Fixtures.bottle(Fixtures.catalog[1], addedSecondsAgo: 1)
-        var layout = CellarLayout(bottles: [a, b], saved: [], sort: .manual)
-        let slotA = layout.slots[a.id]!, slotB = layout.slots[b.id]!
-        layout.move(a.id, to: slotB)
-        #expect(layout.slots[a.id] == slotB)
-        #expect(layout.slots[b.id] == slotA)
-    }
-
-    @Test func growsIntoAdditionalBays() {
-        let bottles = (0..<45).map { Fixtures.bottle(Fixtures.catalog[$0 % Fixtures.catalog.count]) }
-        let layout = CellarLayout(bottles: bottles, saved: [], sort: .type)
-        #expect(layout.bayCount == 2)
-    }
-
-    @Test func sortsByType() {
-        let white = Fixtures.bottle(Fixtures.wine("Cloudy Bay Sauvignon Blanc"))
+@Suite("Cellar wall")
+struct CellarWallTests {
+    @Test func groupsByStyleAndHidesEmptyShelves() {
         let red = Fixtures.bottle(Fixtures.wine("Opus One"))
-        let layout = CellarLayout(bottles: [white, red], saved: [], sort: .type)
-        #expect(layout.slots[red.id] == CellarLayout.Slot(shelf: 0, slot: 0))
+        let white = Fixtures.bottle(Fixtures.wine("Cloudy Bay Sauvignon Blanc"))
+        let opened = Fixtures.bottle(Fixtures.wine("Château Margaux"), quantity: 0)
+        let wall = CellarWall(bottles: [white, red, opened], sort: .recent)
+        #expect(wall.shelves.map(\.id) == ["red", "white"])
+        #expect(wall.shelves[0].bottles == [red])
+        #expect(!wall.orderedBottles.contains(opened))
+    }
+
+    @Test func ordersWithinShelfBySort() {
+        let reds = Fixtures.catalog.filter { $0.type == .red && $0.vintage != nil }.prefix(4)
+        let bottles = reds.enumerated().map { Fixtures.bottle($1, addedSecondsAgo: Double($0)) }
+        let byRecent = CellarWall(bottles: bottles, sort: .recent).shelves[0].bottles
+        #expect(byRecent.first == bottles.first)
+        let byVintage = CellarWall(bottles: bottles, sort: .vintage).shelves[0].bottles.compactMap(\.wine.vintage)
+        #expect(byVintage == byVintage.sorted())
+    }
+
+    @Test func orderedBottlesFollowShelves() {
+        let sparkling = Fixtures.bottle(Fixtures.catalog.first { $0.type == .sparkling }!)
+        let red = Fixtures.bottle(Fixtures.wine("Opus One"))
+        let wall = CellarWall(bottles: [sparkling, red], sort: .recent)
+        #expect(wall.orderedBottles == [red, sparkling])
     }
 
     @Test func filterMatchesAttributes() {

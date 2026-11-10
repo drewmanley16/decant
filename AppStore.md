@@ -49,7 +49,7 @@ SEE WHAT FRIENDS ARE POURING
 Follow friends, like and comment on their reviews, and see their ratings right on each wine's page. Share beautiful wine cards to Instagram Stories or iMessage.
 
 YOUR CELLAR, IN 3D
-Every bottle you own sits on a real 3D shelf wearing its own label. Spin the racks, tap a bottle to pull it out, turn it in your hand, and rearrange your collection. Track quantities, purchase prices and drinking windows — when you open a bottle, it moves to your Wine History.
+Every bottle you own stands on lit shelves, grouped by style and wearing its own label. Tap one to lift it off the shelf in 3D, turn it in your hand to read the label, and swipe through the rest of your collection. Track quantities, purchase prices and drinking windows — when you open a bottle, it moves to your Wine History.
 
 DISCOVER WHAT'S NEXT
 Personal recommendations based on wines you loved, highly rated bottles under $25, regions you haven't explored, and what's popular with your friends.

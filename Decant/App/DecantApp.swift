@@ -35,6 +35,9 @@ struct DecantApp: App {
                 .task {
                     AppDelegate.environment = env
                     await env.bootstrap()
+                    #if DEBUG
+                    await BottleRenderProbe.runIfRequested()
+                    #endif
                 }
                 .onOpenURL { env.open($0) }
         }

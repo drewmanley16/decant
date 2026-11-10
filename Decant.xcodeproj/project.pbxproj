@@ -26,14 +26,17 @@
 		388ACE111A051F2D8ED1BEAE /* Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBCC5D20BC5F8C1F0C2BFB1 /* Scan.swift */; };
 		3D34C53C684F0DE7DFAFFF76 /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFB04BD55530E96B316276D5 /* DiscoverView.swift */; };
 		3F580D6030EBBA3DD52ACF68 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D288061BB9E756AF4D689F /* ProfileView.swift */; };
+		3F604B5C094961DE2DF52318 /* BottleRenderProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CF28545508DE76CD100257 /* BottleRenderProbe.swift */; };
 		41F8246C4CE1231ABB465944 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = A108561B6DB49C584D284C0E /* Components.swift */; };
 		4B96DFF585A7D6A0EA4588F7 /* DecantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40BA674234C7FEDB4C077AB /* DecantApp.swift */; };
 		4C76A715DC04D252369CAE0E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEEF96219EB765BFD06DD6C /* SettingsView.swift */; };
-		4D123CE4B610F42852AE270C /* CellarSceneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD371BB56D5AF40B210F5567 /* CellarSceneController.swift */; };
 		50F68928B27E43E59B6EB3ED /* DeepLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448DD78043B09900A804D268 /* DeepLinkTests.swift */; };
+		5258F090DA349EE80CD4461B /* BottleGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143C480239BA88E9FC46C954 /* BottleGeometry.swift */; };
+		5C45E02EC432174DEF03693E /* CellarWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AC200504C41FD98FD99CD0 /* CellarWallView.swift */; };
 		6D8541D5794CEE0E2BD3C74F /* SeedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 716DB44A7BC2587A688C5135 /* SeedCatalog.swift */; };
 		78675BB5C06DBB0ADD56FCC9 /* WineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F9C8ADCC7BD7FB6CE86235 /* WineDetailView.swift */; };
 		795761E06115502F87179568 /* StatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0F6DF7DEA2FF198DACC9F61 /* StatsCalculator.swift */; };
+		7ECB79D8BD33B0888F9949AB /* BottleStudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B69B6ED25B49EAA5A9BAADB3 /* BottleStudio.swift */; };
 		821662704E26C023990DC42F /* Social.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD58FED6D4B8FB0032D7100 /* Social.swift */; };
 		84E2D7994D6CBD89971BB05B /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D916A00CB33723CB1D3F07EB /* MainTabView.swift */; };
 		84EB8530522BADFC475779AA /* RecommendationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA66F3F22417E8D40128E94 /* RecommendationEngine.swift */; };
@@ -42,8 +45,8 @@
 		8CCB4EC8C17331985F8F8D47 /* WineIdentificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE479F3452337478B040F8F0 /* WineIdentificationService.swift */; };
 		912F3013E04D8508196CAD62 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FAA237CE80BA40D1A4ADE8 /* StatsView.swift */; };
 		93B3CF2B72628FF75FC21B73 /* ScanFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBF4C9B0CCFDA3578CAA490 /* ScanFlowView.swift */; };
-		94B4493E707A4CE52CF7FF5B /* CellarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A886BEF26113F99D763FB5E /* CellarSceneView.swift */; };
 		951B570A12BB0CBA2EF4E4EA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 590B252BF98CB0E5DA044119 /* Theme.swift */; };
+		97BFE130068FFDBC1CF21112 /* BottleInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC64B2F4727531854D7CB948 /* BottleInspectorView.swift */; };
 		97D5427581027DDBCA803406 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D611B2DE376D5D63B08D87 /* AppDelegate.swift */; };
 		9C685F7F9DC7A9311B7289AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4732694B08E709C2556B51CD /* PrivacyInfo.xcprivacy */; };
 		9EC7365A4DEEA6797E9B83F0 /* WineMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED85487825E588A9B60B8946 /* WineMatcher.swift */; };
@@ -62,12 +65,11 @@
 		CB1664B78B113DC3584B23D0 /* SupabaseDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */; };
 		CDAA8B224A573F35EE999DCF /* SampleCommunityFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF78FD6B8DB49E46792B531 /* SampleCommunityFixture.swift */; };
 		CFBB458CF616F1AC14717663 /* CellarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE60931083334C0B1D2F9F40 /* CellarView.swift */; };
+		D1FA851B3CEA766C98D701D5 /* CellarWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 479EB019EAE5FEA26A8705D9 /* CellarWall.swift */; };
 		D2EBE73A3444A2B20F381C10 /* Cellar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9636063E58C91E40902935A /* Cellar.swift */; };
 		D57D60671A4F0FC664E91730 /* WineLexicon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A9FFB5F98762B90200378 /* WineLexicon.swift */; };
-		DAD6634F50F288BA3BB6664F /* CellarLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DF0D49E3CB73D2FE5D2416 /* CellarLayout.swift */; };
 		E0B8C9A42DAB3AF6A4539ADE /* LabelTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E48C89D3D3A9B1BC6DE0B81E /* LabelTextParser.swift */; };
 		E370F3433DE3002E387BE017 /* SeedCatalog.json in Resources */ = {isa = PBXBuildFile; fileRef = CB177B5DE67329E8B67B8CA2 /* SeedCatalog.json */; };
-		E8D61A86618C183ECB94A394 /* CellarAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8DBB2F865BE4B5C10F0CAB /* CellarAssets.swift */; };
 		E95D80F1D89E75134A2AD32B /* LocalBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6583A25F0A021404740F7A30 /* LocalBackend.swift */; };
 		EC870C5BF7D946B311536A5A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 61A71124D6B841BC32BE0D7F /* Assets.xcassets */; };
 		EEE0B3CCD4E8D1BAC166E412 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C293C7C0C6A8FC34F458BE7 /* Services.swift */; };
@@ -86,10 +88,12 @@
 
 /* Begin PBXFileReference section */
 		0301ED5877DD95536F1A97C8 /* IdentificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentificationTests.swift; sourceTree = "<group>"; };
+		05AC200504C41FD98FD99CD0 /* CellarWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarWallView.swift; sourceTree = "<group>"; };
 		05EA1AC1C5C0964C49C83C31 /* App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = App.xcconfig; sourceTree = "<group>"; };
 		060EAFAB716EA5DD89EE976A /* SupabaseBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseBackend.swift; sourceTree = "<group>"; };
 		0B5B390D2D8C4772938B1DC6 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		0D85EE65E4D2C53FEF7B49D4 /* Rating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rating.swift; sourceTree = "<group>"; };
+		143C480239BA88E9FC46C954 /* BottleGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottleGeometry.swift; sourceTree = "<group>"; };
 		1DF78FD6B8DB49E46792B531 /* SampleCommunityFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCommunityFixture.swift; sourceTree = "<group>"; };
 		2091AF9AB5018E23ABC0AC4D /* ShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCard.swift; sourceTree = "<group>"; };
 		22F9CB10ABC78BC3239BA9AD /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
@@ -101,7 +105,7 @@
 		36F9C8ADCC7BD7FB6CE86235 /* WineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineDetailView.swift; sourceTree = "<group>"; };
 		448DD78043B09900A804D268 /* DeepLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkTests.swift; sourceTree = "<group>"; };
 		4732694B08E709C2556B51CD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		4A886BEF26113F99D763FB5E /* CellarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarSceneView.swift; sourceTree = "<group>"; };
+		479EB019EAE5FEA26A8705D9 /* CellarWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarWall.swift; sourceTree = "<group>"; };
 		4CB903EA80EA3BD5E4807C7C /* CellarSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarSheets.swift; sourceTree = "<group>"; };
 		4CEEF96219EB765BFD06DD6C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		536FB8CFEAE91E044CBFCBEA /* CellarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarViewModel.swift; sourceTree = "<group>"; };
@@ -126,10 +130,10 @@
 		A0A91FC0C99730C95C6290A5 /* LogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicTests.swift; sourceTree = "<group>"; };
 		A108561B6DB49C584D284C0E /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		AF1189788C7ADF2AC9F46C3F /* TastingEditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TastingEditTests.swift; sourceTree = "<group>"; };
+		B69B6ED25B49EAA5A9BAADB3 /* BottleStudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottleStudio.swift; sourceTree = "<group>"; };
 		B95C8025DF1C95CC26CFC73A /* Decant.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Decant.entitlements; sourceTree = "<group>"; };
 		BAAD8CF518E4C583A49638D6 /* DecantTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DecantTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE479F3452337478B040F8F0 /* WineIdentificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineIdentificationService.swift; sourceTree = "<group>"; };
-		BF8DBB2F865BE4B5C10F0CAB /* CellarAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarAssets.swift; sourceTree = "<group>"; };
 		C40D89E19451721429B5F044 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C6B507CD3AD4E3FD70A0D2D1 /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		C7F6C06A7FCFB7ED7255B36D /* Safety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Safety.swift; sourceTree = "<group>"; };
@@ -139,11 +143,11 @@
 		D61FA86D75E12153143E01EF /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
 		D916A00CB33723CB1D3F07EB /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		D9636063E58C91E40902935A /* Cellar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cellar.swift; sourceTree = "<group>"; };
-		DD371BB56D5AF40B210F5567 /* CellarSceneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarSceneController.swift; sourceTree = "<group>"; };
 		DFCFDC5DC344CEF182FCA1A2 /* ScanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanViewModel.swift; sourceTree = "<group>"; };
+		E0CF28545508DE76CD100257 /* BottleRenderProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottleRenderProbe.swift; sourceTree = "<group>"; };
 		E48C89D3D3A9B1BC6DE0B81E /* LabelTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelTextParser.swift; sourceTree = "<group>"; };
-		E7DF0D49E3CB73D2FE5D2416 /* CellarLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellarLayout.swift; sourceTree = "<group>"; };
 		EC3415E351134EDD5C91EBB4 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		EC64B2F4727531854D7CB948 /* BottleInspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottleInspectorView.swift; sourceTree = "<group>"; };
 		ECBF4C9B0CCFDA3578CAA490 /* ScanFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFlowView.swift; sourceTree = "<group>"; };
 		ED85487825E588A9B60B8946 /* WineMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineMatcher.swift; sourceTree = "<group>"; };
 		EFB04BD55530E96B316276D5 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
@@ -228,11 +232,12 @@
 		4167EB98DEE3AA5091CCA7E2 /* Cellar */ = {
 			isa = PBXGroup;
 			children = (
-				4A886BEF26113F99D763FB5E /* CellarSceneView.swift */,
+				EC64B2F4727531854D7CB948 /* BottleInspectorView.swift */,
 				4CB903EA80EA3BD5E4807C7C /* CellarSheets.swift */,
 				FE60931083334C0B1D2F9F40 /* CellarView.swift */,
 				536FB8CFEAE91E044CBFCBEA /* CellarViewModel.swift */,
-				B143FFCBCFF18544C7FE2FE2 /* Scene */,
+				05AC200504C41FD98FD99CD0 /* CellarWallView.swift */,
+				BA623A97C74CCFE5DBCC641E /* Bottle3D */,
 			);
 			path = Cellar;
 			sourceTree = "<group>";
@@ -251,7 +256,7 @@
 		68DD9C1BBAFAE0ADC4104423 /* Logic */ = {
 			isa = PBXGroup;
 			children = (
-				E7DF0D49E3CB73D2FE5D2416 /* CellarLayout.swift */,
+				479EB019EAE5FEA26A8705D9 /* CellarWall.swift */,
 				C6B507CD3AD4E3FD70A0D2D1 /* DeepLink.swift */,
 				2FA66F3F22417E8D40128E94 /* RecommendationEngine.swift */,
 				D0F6DF7DEA2FF198DACC9F61 /* StatsCalculator.swift */,
@@ -388,15 +393,6 @@
 			path = Search;
 			sourceTree = "<group>";
 		};
-		B143FFCBCFF18544C7FE2FE2 /* Scene */ = {
-			isa = PBXGroup;
-			children = (
-				BF8DBB2F865BE4B5C10F0CAB /* CellarAssets.swift */,
-				DD371BB56D5AF40B210F5567 /* CellarSceneController.swift */,
-			);
-			path = Scene;
-			sourceTree = "<group>";
-		};
 		B40C017DAB1F29B21F45E6DE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -419,6 +415,16 @@
 				ED85487825E588A9B60B8946 /* WineMatcher.swift */,
 			);
 			path = Identification;
+			sourceTree = "<group>";
+		};
+		BA623A97C74CCFE5DBCC641E /* Bottle3D */ = {
+			isa = PBXGroup;
+			children = (
+				143C480239BA88E9FC46C954 /* BottleGeometry.swift */,
+				E0CF28545508DE76CD100257 /* BottleRenderProbe.swift */,
+				B69B6ED25B49EAA5A9BAADB3 /* BottleStudio.swift */,
+			);
+			path = Bottle3D;
 			sourceTree = "<group>";
 		};
 		D816B3F0DAC5E27FB02501AA /* Services */ = {
@@ -578,14 +584,16 @@
 				97D5427581027DDBCA803406 /* AppDelegate.swift in Sources */,
 				A684ED17735CC98B07C2D68E /* AppEnvironment.swift in Sources */,
 				00E9C632D618F5FCA60A5889 /* BottleArt.swift in Sources */,
+				5258F090DA349EE80CD4461B /* BottleGeometry.swift in Sources */,
+				97BFE130068FFDBC1CF21112 /* BottleInspectorView.swift in Sources */,
+				3F604B5C094961DE2DF52318 /* BottleRenderProbe.swift in Sources */,
+				7ECB79D8BD33B0888F9949AB /* BottleStudio.swift in Sources */,
 				D2EBE73A3444A2B20F381C10 /* Cellar.swift in Sources */,
-				E8D61A86618C183ECB94A394 /* CellarAssets.swift in Sources */,
-				DAD6634F50F288BA3BB6664F /* CellarLayout.swift in Sources */,
-				4D123CE4B610F42852AE270C /* CellarSceneController.swift in Sources */,
-				94B4493E707A4CE52CF7FF5B /* CellarSceneView.swift in Sources */,
 				C042775CBD09AEA14B10FE30 /* CellarSheets.swift in Sources */,
 				CFBB458CF616F1AC14717663 /* CellarView.swift in Sources */,
 				111F2210A0809736EBBDF458 /* CellarViewModel.swift in Sources */,
+				D1FA851B3CEA766C98D701D5 /* CellarWall.swift in Sources */,
+				5C45E02EC432174DEF03693E /* CellarWallView.swift in Sources */,
 				41F8246C4CE1231ABB465944 /* Components.swift in Sources */,
 				4B96DFF585A7D6A0EA4588F7 /* DecantApp.swift in Sources */,
 				A7C3292318DEFB121DEC81F8 /* DeepLink.swift in Sources */,
@@ -706,7 +714,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -845,7 +853,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;

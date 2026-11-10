@@ -71,7 +71,7 @@ struct CellarCustomizeSheet: View {
                             } label: {
                                 VStack(spacing: 6) {
                                     RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color(uiColor: CellarTextures.woodColor(finish)))
+                                        .fill(CellarWallStyle.wood(finish))
                                         .frame(height: 44)
                                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(model.settings.finish == finish ? Palette.burgundy : .clear, lineWidth: 2.5))
                                     Text(finish.displayName).font(.caption)
@@ -84,13 +84,15 @@ struct CellarCustomizeSheet: View {
                     .padding(.vertical, 6)
                 }
                 Section {
-                    Picker("Arrange by", selection: Binding(get: { model.settings.sort }, set: { sort in Task { await model.setSort(sort) } })) {
-                        ForEach(CellarSort.allCases) { Text($0.displayName).tag($0) }
+                    Picker("Order bottles by", selection: Binding(
+                        get: { CellarSort.selectable.contains(model.settings.sort) ? model.settings.sort : .recent },
+                        set: { sort in Task { await model.setSort(sort) } })) {
+                        ForEach(CellarSort.selectable) { Text($0.displayName).tag($0) }
                     }
                 } header: {
                     Text("Organization")
                 } footer: {
-                    Text("Choose Manual to arrange bottles yourself — press and hold a bottle in 3D to move it.")
+                    Text("Bottles are grouped onto shelves by style: red, white, rosé, sparkling and sweet.")
                 }
                 Section("Collections") {
                     ForEach(model.collections) { collection in
@@ -105,11 +107,6 @@ struct CellarCustomizeSheet: View {
                         }
                         .disabled(newCollection.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
-                }
-                Section {
-                    Toggle("Use 2D shelves", isOn: Binding(get: { model.settings.prefers2D }, set: { v in Task { await model.set2D(v) } }))
-                } footer: {
-                    Text("A lighter view for accessibility and older devices. Low Power Mode switches to 2D automatically.")
                 }
                 Section {
                     Label("Cellar rooms, lighting styles and display themes", systemImage: "lightbulb")

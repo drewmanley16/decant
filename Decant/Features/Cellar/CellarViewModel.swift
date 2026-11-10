@@ -15,14 +15,11 @@ final class CellarViewModel {
     var history: [HistoryWine] = []
     var collections: [CellarCollection] = []
     var settings = CellarSettings()
-    var layout = CellarLayout(bottles: [], saved: [], sort: .manual)
+    var wall = CellarWall(bottles: [], sort: .recent)
     var filter = CellarFilter()
     var myRatings: [UUID: Double] = [:]
-    var inspectedID: UUID?
-    var movingID: UUID?
 
     private let env: AppEnvironment
-    private var savedPlacements: [CellarPlacement] = []
 
     init(env: AppEnvironment) {
         self.env = env
@@ -37,17 +34,14 @@ final class CellarViewModel {
         inStock.reduce(0) { $0 + Double($1.quantity) * ($1.purchasePrice?.doubleValue ?? 0) }
     }
 
-    /// Bottles actually rendered.
-    var displayedBottles: [CellarBottle] { inStock }
-
     var dimmedIDs: Set<UUID> {
         guard filter.isActive else { return [] }
-        return Set(displayedBottles.filter { !filter.matches($0, rating: myRatings[$0.wine.id]) }.map(\.id))
+        return Set(inStock.filter { !filter.matches($0, rating: myRatings[$0.wine.id]) }.map(\.id))
     }
 
     func bottle(_ id: UUID?) -> CellarBottle? {
         guard let id else { return nil }
-        return displayedBottles.first { $0.id == id }
+        return inStock.first { $0.id == id }
     }
 
     var availableRegions: [String] { Array(Set(inStock.compactMap(\.wine.region))).sorted() }
@@ -58,13 +52,11 @@ final class CellarViewModel {
         if bottles.value == nil { bottles = .loading }
         do {
             async let bottlesTask = env.cellar.bottles()
-            async let placementsTask = env.cellar.placements()
             async let settingsTask = env.cellar.settings()
             async let collectionsTask = env.cellar.collections()
-            let (loaded, placements, settings, collections) = try await (bottlesTask, placementsTask, settingsTask, collectionsTask)
+            let (loaded, settings, collections) = try await (bottlesTask, settingsTask, collectionsTask)
             self.settings = settings
             self.collections = collections
-            self.savedPlacements = placements
             bottles = .loaded(loaded)
             await loadHistory()
             relayout()
@@ -78,18 +70,14 @@ final class CellarViewModel {
         let items = (try? await env.tastings.entries(forUser: me.id)) ?? []
         history = StatsCalculator.history(items)
         myRatings = Dictionary(history.compactMap { h in h.bestRating.map { (h.wine.id, $0) } }, uniquingKeysWith: max)
+        relayout()
     }
 
     func relayout() {
-        layout = CellarLayout(bottles: inStock, saved: savedPlacements, sort: settings.sort, ratings: myRatings)
+        wall = CellarWall(bottles: inStock, sort: settings.sort, ratings: myRatings)
     }
 
     func setSort(_ sort: CellarSort) async {
-        if sort == .manual {
-            // Freeze the current arrangement as the manual layout.
-            savedPlacements = layout.placements
-            try? await env.cellar.savePlacements(savedPlacements)
-        }
         settings.sort = sort
         relayout()
         try? await env.cellar.saveSettings(settings)
@@ -98,25 +86,6 @@ final class CellarViewModel {
     func setFinish(_ finish: ShelfFinish) async {
         settings.finish = finish
         try? await env.cellar.saveSettings(settings)
-    }
-
-    func set2D(_ prefers2D: Bool) async {
-        settings.prefers2D = prefers2D
-        try? await env.cellar.saveSettings(settings)
-    }
-
-    func move(_ bottleID: UUID, to slot: CellarLayout.Slot) async {
-        layout.move(bottleID, to: slot)
-        savedPlacements = layout.placements
-        if settings.sort != .manual {
-            settings.sort = .manual
-            try? await env.cellar.saveSettings(settings)
-        }
-        do {
-            try await env.cellar.savePlacements(savedPlacements)
-        } catch {
-            env.show("Couldn't save arrangement", symbol: "exclamationmark.triangle.fill")
-        }
     }
 
     func consume(_ bottle: CellarBottle) async {
