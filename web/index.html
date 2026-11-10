@@ -8,6 +8,7 @@
 <meta property="og:title" content="Decant">
 <meta property="og:description" content="A wine diary for you and your friends. Invite-only for now.">
 <meta name="theme-color" content="#4A0F1C">
+<meta name="apple-itunes-app" content="app-id=6827748559">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -25,7 +26,8 @@
           border: 1.5px dashed var(--gold); border-radius: 16px; margin: 0 0 22px; background: #fff8; }
   .btn { display: block; text-decoration: none; background: var(--burgundy); color: #fff; font-weight: 600;
          padding: 16px; border-radius: 999px; margin-bottom: 12px; }
-  .ghost { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; }
+  .ghost { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; display: inline-block; padding: 6px 0; }
+  .ghost-btn { width: 100%; border: 1.5px solid var(--burgundy); background: transparent; color: var(--burgundy); font: inherit; font-weight: 600; cursor: pointer; }
   .hidden { display: none; }
 </style>
 </head>
@@ -35,8 +37,10 @@
   <h1 id="title">Every great bottle, remembered.</h1>
   <p id="body">A wine diary for you and your friends. Scan a label, rate it, and keep your cellar.</p>
   <div id="code" class="code hidden"></div>
-  <a id="open" class="btn" href="decant://">Open in Decant</a>
-  <p style="font-size:14px;margin:6px 0 0">Decant is in private beta on iPhone.</p>
+  <button id="copy" class="btn ghost-btn hidden" type="button">Copy invite code</button>
+  <a id="store" class="btn" href="https://apps.apple.com/us/app/decant-wine-scanner-cellar/id6827748559">Get Decant on the App Store</a>
+  <a id="open" class="ghost" href="decant://">Already have Decant? Open it</a>
+  <p style="font-size:13px;margin:16px 0 0">Available for iPhone.</p>
 </main>
 <script>
   // Universal links open the app directly when it's installed; this page is the fallback.
@@ -46,7 +50,7 @@
     t: ["A tasting on Decant", "Someone shared a tasting with you. Open it in Decant to see the rating and review."],
     u: ["A Decant profile", "See their diary, cellar highlights and favourite bottles in Decant."],
     w: ["A wine on Decant", "See ratings and reviews for this wine in Decant."],
-    invite: ["You're invited to Decant", "Decant is invite-only. Use this code when you sign up."],
+    invite: ["You're invited to Decant", "Decant is invite-only. Get the app, then enter this code when you sign up."],
   }[kind];
   if (copy && safe) {
     document.getElementById("title").textContent = copy[0];
@@ -56,6 +60,12 @@
       const el = document.getElementById("code");
       el.textContent = safe.toUpperCase();
       el.classList.remove("hidden");
+      const copyBtn = document.getElementById("copy");
+      copyBtn.classList.remove("hidden");
+      copyBtn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(safe.toUpperCase()); copyBtn.textContent = "Copied"; }
+        catch { const r = document.createRange(); r.selectNodeContents(el); getSelection().removeAllRanges(); getSelection().addRange(r); }
+      });
     }
   }
 </script>

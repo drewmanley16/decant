@@ -342,7 +342,8 @@ private struct InviteCard: View {
                     .font(Typo.title3)
                     .foregroundStyle(Palette.charcoal)
                 Spacer()
-                Text(invite.remaining == 0 ? "All used" : "\(invite.remaining) of \(invite.maxUses) left")
+                Text(invite.isUnlimited ? "Unlimited"
+                     : invite.remaining == 0 ? "All used" : "\(invite.remaining) of \(invite.maxUses) left")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(invite.remaining == 0 ? Palette.secondaryText : Palette.burgundy)
                     .padding(.horizontal, 10).padding(.vertical, 5)

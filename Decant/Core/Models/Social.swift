@@ -26,6 +26,8 @@ struct InviteStatus: Hashable, Sendable {
     var maxUses: Int
     var used: Int
     var remaining: Int { max(0, maxUses - used) }
+    /// Admin accounts get a huge `max_uses` in the database instead of a separate flag.
+    var isUnlimited: Bool { maxUses >= 100_000 }
 }
 
 /// Who can see a review / tasting entry. Matches the `visibility` Postgres enum.
