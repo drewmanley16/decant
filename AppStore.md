@@ -40,7 +40,7 @@ Every great bottle, remembered.
 Decant is the wine app for people who love what's in their glass — at a restaurant, at a winery, or at home with friends.
 
 SCAN ANY LABEL
-Point your camera at a bottle. Decant reads the label, identifies the wine and vintage, and shows you the producer, region, grapes, taste profile, food pairings and the winery's story. If it's not sure, it tells you — and you can correct it in a tap.
+Point your camera at a bottle. Decant reads the label and identifies the wine and vintage from a catalog of over 185,000 wines, showing you the producer, region and appellation, plus what your friends and the community thought of it. If it's not sure, it tells you — and you can correct it in a tap.
 
 A DIARY FOR EVERY GLASS
 Rate wines in half stars, write reviews, keep private tasting notes, add photos, and log where and when you drank them. Taste the same wine again next year? Log it again.

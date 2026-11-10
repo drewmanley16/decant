@@ -19,6 +19,8 @@ struct RateWineView: View {
     @State private var saving = false
     @State private var error: String?
     @State private var savedEntry: TastingEntry?
+    /// Set once a new tasting is created, so extra taps on Save can't post it again.
+    @State private var didSave = false
     @State private var confirmsDiscard = false
 
     private static let maxPhotos = 4
@@ -273,7 +275,7 @@ struct RateWineView: View {
     private var isDirty: Bool { draft != original || !newPhotos.isEmpty }
 
     private var canSave: Bool {
-        guard !saving else { return false }
+        guard !saving, !didSave else { return false }
         let hasContent = draft.rating != nil || draft.review.nilIfBlank != nil || draft.personalNotes.nilIfBlank != nil
         return hasContent && (editing == nil || isDirty)
     }
@@ -308,6 +310,7 @@ struct RateWineView: View {
                 return
             }
             let entry = try await env.tastings.addEntry(for: wine.id, draft: final)
+            didSave = true
             if final.addToCellar {
                 _ = try await env.cellar.addBottle(wineID: wine.id, draft: CellarBottleDraft())
                 env.cellarRevision += 1

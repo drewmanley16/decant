@@ -35,7 +35,7 @@ struct StatsView: View {
                 tile("\(s.uniqueWineries)", "Wineries", "building.columns")
                 tile("\(s.countries.count)", "Countries", "globe.europe.africa")
                 tile(s.averageRating.map { $0.formatted(.number.precision(.fractionLength(2))) } ?? "–", "Average rating", "star")
-                tile(s.mostExpensive?.price?.formatted ?? "–", "Priciest bottle", "tag")
+                tile("\(s.regions.count)", "Regions", "map")
             }
 
             card("Monthly tastings") {

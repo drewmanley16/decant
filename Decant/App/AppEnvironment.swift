@@ -97,9 +97,14 @@ final class AppEnvironment {
             return AppEnvironment(mode: .supabase, auth: backend, catalog: backend, tastings: backend, social: backend,
                                   cellar: backend, scans: backend, media: backend, remoteReader: backend)
         }
+        #if !DEBUG
+        // Local Mode uses a sample catalog and a simulated community; it must never ship.
+        preconditionFailure("Supabase is not configured. Fill in Config/Secrets.xcconfig before archiving.")
+        #else
         let backend = LocalBackend()
         return AppEnvironment(mode: .local, auth: backend, catalog: backend, tastings: backend, social: backend,
                               cellar: backend, scans: backend, media: backend, remoteReader: nil)
+        #endif
     }
 
     /// In-memory environment for SwiftUI previews and tests.

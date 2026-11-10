@@ -93,8 +93,10 @@ private struct CellarContent: View {
             HStack(spacing: 0) {
                 stat("\(model.totalBottles)", "Bottles")
                 Divider().frame(height: 28)
-                stat(model.estimatedValue > 0 ? Price(amount: Decimal(model.estimatedValue), currency: "USD").formatted : "–", "Est. value")
-                Divider().frame(height: 28)
+                if model.purchasedValue > 0 {
+                    stat(Price(amount: Decimal(model.purchasedValue), currency: "USD").formatted, "Paid")
+                    Divider().frame(height: 28)
+                }
                 stat("\(model.history.count)", "Wines tasted")
             }
         }
@@ -171,8 +173,6 @@ private struct CellarContent: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if model.isEmpty {
                     emptyCard
-                } else {
-                    hint
                 }
             }
             .padding(.horizontal, 16)
@@ -181,16 +181,6 @@ private struct CellarContent: View {
             accessibleBottleList
         }
         .background(Color(red: 0.055, green: 0.043, blue: 0.039))
-    }
-
-    private var hint: some View {
-        Label("Tap a bottle · Drag to look around · Hold to rearrange", systemImage: "hand.tap")
-            .font(.caption.weight(.medium))
-            .foregroundStyle(.white.opacity(0.8))
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(.ultraThinMaterial.opacity(0.6), in: Capsule())
-            .environment(\.colorScheme, .dark)
-            .accessibilityHidden(true)
     }
 
     private var moveBanner: some View {
@@ -395,19 +385,25 @@ struct Cellar2DGrid: View {
             }
             LazyVStack(spacing: 18) {
                 ForEach(Array(shelves.enumerated()), id: \.offset) { _, shelf in
+                    // Bottles stand directly on the shelf; names sit below it so a
+                    // count badge or a long name never lifts one bottle off the wood.
                     VStack(spacing: 0) {
                         HStack(alignment: .bottom, spacing: 0) {
                             ForEach(shelf) { bottle in
                                 Button { onSelect(bottle) } label: {
-                                    VStack(spacing: 6) {
-                                        BottleArtView(wine: bottle.wine, height: 120)
-                                            .opacity(model.dimmedIDs.contains(bottle.id) ? 0.2 : 1)
-                                        Text(bottle.wine.name).font(.caption2.weight(.semibold)).lineLimit(1)
-                                        if bottle.quantity > 1 {
-                                            Text("×\(bottle.quantity)").font(.caption2).foregroundStyle(Palette.gold)
+                                    BottleArtView(wine: bottle.wine, height: 120)
+                                        .opacity(model.dimmedIDs.contains(bottle.id) ? 0.2 : 1)
+                                        .overlay(alignment: .topTrailing) {
+                                            if bottle.quantity > 1 {
+                                                Text("×\(bottle.quantity)")
+                                                    .font(.caption2.weight(.bold).monospacedDigit())
+                                                    .foregroundStyle(.white)
+                                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                                    .background(Palette.burgundy, in: Capsule())
+                                                    .offset(x: 10, y: 14)
+                                            }
                                         }
-                                    }
-                                    .frame(maxWidth: .infinity)
+                                        .frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("\(bottle.wine.displayName), \(bottle.quantity) in cellar")
@@ -419,6 +415,21 @@ struct Cellar2DGrid: View {
                             .fill(Color(uiColor: CellarTextures.woodColor(model.settings.finish)))
                             .frame(height: 10)
                             .shadow(color: .black.opacity(0.25), radius: 4, y: 3)
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(shelf) { bottle in
+                                Text(bottle.wine.name)
+                                    .font(.caption2.weight(.semibold))
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .foregroundStyle(Palette.charcoal)
+                                    .padding(.horizontal, 4)
+                                    .frame(maxWidth: .infinity)
+                                    .accessibilityHidden(true)
+                            }
+                            ForEach(0..<(4 - shelf.count), id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.top, 8)
                     }
                 }
             }

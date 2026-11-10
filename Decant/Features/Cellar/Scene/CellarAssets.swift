@@ -115,25 +115,21 @@ final class CellarAssets {
 
     func labelMaterial(image: UIImage?) -> SCNMaterial {
         let m = SCNMaterial()
-        m.lightingModel = .physicallyBased
+        // Paper is matte: a physically based sheen from the studio environment lifted
+        // the ink to grey and glared at the edges, so labels use plain diffuse shading.
+        m.lightingModel = .lambert
         m.diffuse.contents = image ?? UIColor(hex: 0xF1E9DA)
         m.diffuse.mipFilter = .linear
+        m.diffuse.maxAnisotropy = 16
         m.diffuse.wrapS = .clamp
         m.diffuse.intensity = 0.8
-        m.roughness.contents = 0.7
-        m.metalness.contents = 0.0
+        m.specular.contents = UIColor.black
+        // A little of the label's own art as emission keeps it readable on the
+        // shadowed lower shelves, like a lit display case.
+        m.emission.intensity = 0.25
+        m.emission.mipFilter = .linear
+        m.emission.maxAnisotropy = 16
         m.isDoubleSided = false
-        return m
-    }
-
-    /// Rack back panels sit in shadow; a darker copy keeps bottles from blending into them.
-    func backPanelWood(_ finish: ShelfFinish) -> SCNMaterial {
-        let key = "back-\(finish)"
-        if let m = capsuleMaterials[key] { return m }
-        let m = wood(finish).copy() as! SCNMaterial
-        m.diffuse.intensity = 0.45
-        m.roughness.contents = 0.8
-        capsuleMaterials[key] = m
         return m
     }
 
@@ -265,25 +261,44 @@ enum CellarTextures {
         }
     }
 
-    static func brick() -> UIImage {
+    /// Smooth, dark lime-plaster wall: a near-flat tone with soft mottling so it
+    /// doesn't read as a flat render colour under the shelf lights.
+    static func plaster() -> UIImage {
         let size = CGSize(width: 512, height: 512)
         var rng = SeededGenerator(seed: 7)
         return UIGraphicsImageRenderer(size: size).image { ctx in
-            UIColor(hex: 0x2B2220).setFill()
+            UIColor(hex: 0x231C19).setFill()
             ctx.fill(CGRect(origin: .zero, size: size))
-            let brickH: CGFloat = 32, brickW: CGFloat = 96
-            var row = 0
-            var y: CGFloat = 0
-            while y < size.height {
-                var x: CGFloat = row % 2 == 0 ? 0 : -brickW / 2
-                while x < size.width {
-                    let shade = CGFloat.random(in: 0.75...1.1, using: &rng)
-                    UIColor(red: 0.36 * shade, green: 0.22 * shade, blue: 0.18 * shade, alpha: 1).setFill()
-                    ctx.fill(CGRect(x: x + 2, y: y + 2, width: brickW - 4, height: brickH - 4))
-                    x += brickW
-                }
-                y += brickH
-                row += 1
+            for _ in 0..<1400 {
+                let r = CGFloat.random(in: 3...14, using: &rng)
+                let c = CGPoint(x: .random(in: -20...532, using: &rng), y: .random(in: -20...532, using: &rng))
+                let light = Bool.random(using: &rng)
+                (light ? UIColor.white : UIColor.black).withAlphaComponent(.random(in: 0.004...0.012, using: &rng)).setFill()
+                ctx.cgContext.fillEllipse(in: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
+            }
+        }
+    }
+
+    /// The LED wash that rises up the wall behind each shelf: brightest just above
+    /// the strip, fading upward, and feathered at both ends so it reads as light
+    /// on plaster rather than a panel.
+    static func wallWash() -> UIImage {
+        let size = CGSize(width: 256, height: 128)
+        return UIGraphicsImageRenderer(size: size).image { ctx in
+            let cg = ctx.cgContext
+            let space = CGColorSpaceCreateDeviceRGB()
+            let vertical = [UIColor(hex: 0xFFB45E).withAlphaComponent(0.5).cgColor,
+                            UIColor(hex: 0xFF9F45).withAlphaComponent(0.12).cgColor,
+                            UIColor(hex: 0xFF9F45).withAlphaComponent(0).cgColor]
+            if let g = CGGradient(colorsSpace: space, colors: vertical as CFArray, locations: [0, 0.3, 1]) {
+                cg.drawLinearGradient(g, start: CGPoint(x: 0, y: size.height), end: .zero, options: [])
+            }
+            // Feather the ends: erase toward the left and right edges.
+            cg.setBlendMode(.destinationOut)
+            let edge = [UIColor.black.cgColor, UIColor.black.withAlphaComponent(0).cgColor]
+            if let g = CGGradient(colorsSpace: space, colors: edge as CFArray, locations: [0, 1]) {
+                cg.drawLinearGradient(g, start: .zero, end: CGPoint(x: size.width * 0.18, y: 0), options: [])
+                cg.drawLinearGradient(g, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: size.width * 0.82, y: 0), options: [])
             }
         }
     }

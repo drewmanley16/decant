@@ -224,10 +224,6 @@ private struct SearchFilterSheet: View {
                     Text("Any").tag(Int?.none)
                     ForEach((1980...Calendar.current.component(.year, from: .now)).reversed(), id: \.self) { Text(String($0)).tag(Int?.some($0)) }
                 }
-                Picker("Max price", selection: $query.maxPrice) {
-                    Text("Any").tag(Double?.none)
-                    ForEach([15.0, 25, 50, 100, 250], id: \.self) { Text("Under $\(Int($0))").tag(Double?.some($0)) }
-                }
                 Picker("Average rating", selection: $query.minRating) {
                     Text("Any").tag(Double?.none)
                     ForEach([3.0, 3.5, 4.0, 4.5], id: \.self) { Text("\($0.formatted())★ and up").tag(Double?.some($0)) }

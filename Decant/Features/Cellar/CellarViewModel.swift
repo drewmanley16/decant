@@ -31,8 +31,10 @@ final class CellarViewModel {
     var inStock: [CellarBottle] { (bottles.value ?? []).filter(\.isInStock) }
     var isEmpty: Bool { bottles.value != nil && inStock.isEmpty }
     var totalBottles: Int { inStock.map(\.quantity).reduce(0, +) }
-    var estimatedValue: Double {
-        inStock.reduce(0) { $0 + Double($1.quantity) * ($1.purchasePrice?.doubleValue ?? $1.wine.price?.doubleValue ?? 0) }
+    /// Sum of purchase prices the user entered. Catalog prices aren't used: they
+    /// aren't sourced from real market data.
+    var purchasedValue: Double {
+        inStock.reduce(0) { $0 + Double($1.quantity) * ($1.purchasePrice?.doubleValue ?? 0) }
     }
 
     /// Bottles actually rendered.
