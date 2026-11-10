@@ -75,7 +75,10 @@ wine,scanner,label,cellar,bottle,sommelier,tasting,notes,rating,vintage,red,whit
 
 **Screenshots** are in `screenshots/`, captured from the live app on the demo account. Upload in filename order:
 - `iphone-6.9/` (1320×2868): the required set. Apple scales it down for smaller iPhones.
-- `iphone-6.3/` (1206×2622): the "iPhone with Dynamic Island (medium display)" slot, if you want native-size shots there.
+- `iphone-6.3/` (1206×2622): the "iPhone with Dynamic Island (medium display)" slot. The 6.9" set is rejected there for its size.
+- `iphone-6.1/` (1179×2556): fallback for the medium slot if it asks for the 6.1" size.
+
+All screenshots are flattened RGB with no alpha channel, which App Store Connect requires.
 
 1. `1-cellar.png`: cellar shelves grouped by style
 2. `2-inspect.png`: a bottle lifted off the shelf in 3D
