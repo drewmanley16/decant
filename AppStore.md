@@ -31,7 +31,7 @@
 ## Version 1.0 page
 
 **Promotional text** (170 chars max):
-> Point your camera at any wine label. Decant identifies the exact wine and vintage, remembers how you rated it, and puts the bottle in your own 3D cellar.
+> Point your camera at any wine label. Decant identifies the exact wine and vintage, remembers how you rated it, and stands the bottle on your own cellar shelves in 3D.
 
 **Description:**
 ```
@@ -49,10 +49,10 @@ SEE WHAT FRIENDS ARE POURING
 Follow friends, like and comment on their reviews, and see their ratings right on each wine's page. Share beautiful wine cards to Instagram Stories or iMessage.
 
 YOUR CELLAR, IN 3D
-Every bottle you own stands on lit shelves, grouped by style and wearing its own label. Tap one to lift it off the shelf in 3D, turn it in your hand to read the label, and swipe through the rest of your collection. Track quantities, purchase prices and drinking windows — when you open a bottle, it moves to your Wine History.
+Every bottle you own stands on lit shelves, grouped by style and wearing its own label. Tap one to lift it off the shelf in 3D, turn it in your hand to read the label, and swipe through the rest of your collection. Track how many bottles you have and what you paid. When you open one, it moves to your Wine History.
 
 DISCOVER WHAT'S NEXT
-Personal recommendations based on wines you loved, highly rated bottles under $25, regions you haven't explored, and what's popular with your friends.
+Personal recommendations based on wines you loved, regions you haven't explored, and what's popular with your friends.
 
 YOUR STATS
 Wines tasted, countries explored, favorite grapes and regions, monthly activity, and your top-rated bottles.
@@ -65,23 +65,26 @@ Decant is for adults of legal drinking age. Please drink responsibly.
 
 **Keywords** (100 chars max, 98 used):
 ```
-wine,scanner,label,cellar,vivino,sommelier,tasting,notes,rating,vintage,red,white,collection,diary
+wine,scanner,label,cellar,bottle,sommelier,tasting,notes,rating,vintage,red,white,collection,diary
 ```
-> Using a competitor's name as a keyword ("vivino") is allowed but sometimes flagged by review. Swap it for `bottle` if you'd rather avoid any risk.
+> `vivino` was swapped for `bottle`: competitor names in keywords can get a first submission rejected under guideline 2.3.7.
 
 **Support URL:** `https://drewmanley16.github.io/decant-legal/support.html`
 **Marketing URL:** `https://drewmanley16.github.io/decant-legal/`
 **Copyright:** `2026 Drew Manley`
 
-**Screenshots** (6.9" iPhone, 1320×2868) are in `screenshots/`. Upload them in filename order:
-1. `1-cellar-inspect.png`: the 3D cellar with a bottle being inspected
-2. `2-scan.png`: a label identified
-3. `3-wine-detail.png`: the wine page
-4. `4-cellar.png`: the full 3D cellar
-5. `5-discover.png`: personalised discovery and the friend feed
-6. `6-profile.png`: profile, diary and stats
+**Screenshots** are in `screenshots/`, captured from the live app on the demo account. Upload in filename order:
+- `iphone-6.9/` (1320×2868): the required set. Apple scales it down for smaller iPhones.
+- `iphone-6.3/` (1206×2622): the "iPhone with Dynamic Island (medium display)" slot, if you want native-size shots there.
 
-Apple scales 6.9" screenshots down for smaller iPhones, so no other sizes are required.
+1. `1-cellar.png`: cellar shelves grouped by style
+2. `2-inspect.png`: a bottle lifted off the shelf in 3D
+3. `3-discover.png`: personal recommendations
+4. `4-wine-detail.png`: the wine page with community rating
+5. `5-history.png`: Wine History, every wine you've tasted
+6. `6-stats.png`: your tasting statistics
+
+**Product page header** (Header and Search Results → Header): `screenshots/header/decant-header-3840x1646.png`.
 
 ## App Privacy (the "nutrition label")
 Data used to track you: **No.**
@@ -107,7 +110,9 @@ Decant identifies wine from a photo of the bottle label.
 
 To test scanning: tap the round Scan button, then point the camera at any wine label (or tap "Photos" to choose a label photo). If you don't have a bottle handy, search "Margaux" in the Search tab to open a wine directly.
 
-The 3D cellar is in the Cellar tab: drag to look around, tap a bottle to inspect and rotate it, press and hold to move it.
+The cellar is in the Cellar tab. Shelves scroll sideways. Tap a bottle to open it in 3D, swipe left and right to move between bottles, and tap "Turn bottle" to rotate it and pinch to zoom.
+
+Decant is invite-only. The demo account below is already a member. To test creating a new account, use invite code <DEMO_INVITE_CODE>.
 
 User-generated content safeguards (Guideline 1.2):
 • Users must accept the Terms of Use / Community Guidelines (zero tolerance for objectionable content) and confirm legal drinking age before using the app.
@@ -123,6 +128,7 @@ The demo account below already has tastings and cellar bottles.
 **Demo account** (Sign-In Information):
 - Username: `drewmanley16+appreview@gmail.com`
 - Password: kept out of this public repo. It was given to Drew directly; store it in a password manager.
+- Invite code for the reviewer notes: the demo account's code from Profile → Invite friends. Kept out of this public repo for the same reason: anyone could use it to join.
 
 ## Moderation runbook (needed to keep the 24-hour promise)
 Supabase dashboard → SQL Editor:

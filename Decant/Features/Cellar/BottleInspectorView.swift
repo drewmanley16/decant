@@ -20,6 +20,7 @@ struct BottleInspectorView: View {
     @State private var ratingWine: Wine?
     @State private var managedBottle: CellarBottle?
     @State private var shareItem: ShareImage?
+    @State private var confirmOpen: CellarBottle?
 
     init(model: CellarViewModel, startID: UUID, onOpenDetails: @escaping (Wine) -> Void) {
         self.model = model
@@ -41,7 +42,7 @@ struct BottleInspectorView: View {
                     .frame(height: stageHeight)
                 if let current {
                     InspectorDetails(bottle: current, myRating: model.myRatings[current.wine.id],
-                                     onOpen: { Task { await model.consume(current) } },
+                                     onOpen: { confirmOpen = current },
                                      onRate: { ratingWine = current.wine },
                                      onDetails: { onOpenDetails(current.wine) },
                                      onManage: { managedBottle = current })
@@ -63,6 +64,17 @@ struct BottleInspectorView: View {
             if ids.isEmpty { dismiss() } else { self.currentID = ids[min(index, ids.count - 1)]; settledID = self.currentID }
         }
         .sensoryFeedback(.selection, trigger: settledID)
+        // Opening a bottle changes inventory, so it takes a second tap.
+        .confirmationDialog("Open a bottle of \(confirmOpen?.wine.name ?? "this wine")?",
+                            isPresented: Binding(get: { confirmOpen != nil }, set: { if !$0 { confirmOpen = nil } }),
+                            titleVisibility: .visible, presenting: confirmOpen) { bottle in
+            Button("Open bottle") { Task { await model.consume(bottle) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { bottle in
+            Text(bottle.quantity == 1
+                 ? "This is your last bottle. It will move to your Wine History."
+                 : "You'll have \(bottle.quantity - 1) left in your cellar.")
+        }
     }
 
     // MARK: Top bar

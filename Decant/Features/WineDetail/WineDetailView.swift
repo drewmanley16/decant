@@ -79,7 +79,8 @@ private struct WineDetailContent: View {
 
     private var hero: some View {
         BottleStage(tint: Palette.wineColor(wine.type)) {
-            BottleArtView(wine: wine, height: 280)
+            // Same studio render as the cellar shelves.
+            BottleRender(wine: wine, height: 320)
                 .onTapGesture { if wine.labelImagePath != nil { showLabel = true } }
                 .accessibilityAddTraits(wine.labelImagePath != nil ? .isButton : [])
                 .accessibilityHint(wine.labelImagePath != nil ? "Shows your label photo" : "")

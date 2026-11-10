@@ -10,8 +10,21 @@ enum BottleRenderProbe {
         var picks: [Wine] = []
         for type in WineType.allCases { picks += wines.filter { $0.type == type }.prefix(2) }
         var images: [UIImage] = []
-        for wine in picks.prefix(10) {
-            if let image = await BottleStudio.shared.thumbnail(for: wine) { images.append(image) }
+        // `-probeNames "A|B|C"` picks specific catalog wines; `-probeHeight N` sets render size.
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-probeNames"), i + 1 < args.count {
+            let names = args[i + 1].split(separator: "|").map(String.init)
+            picks = names.compactMap { name in wines.first { $0.name == name } }
+        }
+        var height = 720
+        if let i = args.firstIndex(of: "-probeHeight"), i + 1 < args.count, let h = Int(args[i + 1]) { height = h }
+        for (index, wine) in picks.prefix(12).enumerated() {
+            let image = height == 720 ? await BottleStudio.shared.thumbnail(for: wine)
+                                      : await BottleStudio.shared.render(wine: wine, pixelHeight: height)
+            if let image {
+                images.append(image)
+                try? image.pngData()?.write(to: FileManager.default.temporaryDirectory.appendingPathComponent("bottle-\(index).png"))
+            }
         }
         guard let first = images.first else { print("PROBE: no renders"); return }
         let cell = first.size

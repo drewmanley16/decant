@@ -222,6 +222,13 @@ final class BottleStudio {
         return image
     }
 
+    #if DEBUG
+    /// Uncached render at any size, for marketing images.
+    func render(wine: Wine, pixelHeight: Int) async -> UIImage? {
+        await render(makeBottle(for: wine, label: await labelImage(for: wine)), pixelHeight: pixelHeight)
+    }
+    #endif
+
     private static func diskURL(_ key: String) -> URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("bottles", isDirectory: true)
