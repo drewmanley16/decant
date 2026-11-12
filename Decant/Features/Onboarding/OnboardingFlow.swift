@@ -55,6 +55,14 @@ struct OnboardingFlow: View {
         .onAppear {
             // Already signed in (e.g. reinstalled) — jump past the intro, but never past the age gate.
             if env.currentUser != nil { step = !ageAndTermsConfirmed ? .age : env.needsInvite ? .invite : .tastes }
+            #if DEBUG
+            // Layout checks: `-onboardingStep tastes` opens straight on that step.
+            if let i = ProcessInfo.processInfo.arguments.firstIndex(of: "-onboardingStep"),
+               i + 1 < ProcessInfo.processInfo.arguments.count,
+               let debugStep = Step.allCases.first(where: { "\($0)" == ProcessInfo.processInfo.arguments[i + 1] }) {
+                step = debugStep
+            }
+            #endif
         }
     }
 
@@ -93,6 +101,11 @@ struct OnboardingFlow: View {
         .foregroundStyle(onDark ? Color.white : Palette.burgundy)
         .padding(.horizontal, 20)
         .padding(.top, 6)
+        .padding(.bottom, 8)
+        // Content that scrolls up slides under the bar instead of colliding with it.
+        .background(alignment: .top) {
+            if !onDark { Palette.cream.ignoresSafeArea(edges: .top) }
+        }
     }
 
     private var progress: CGFloat {
@@ -173,6 +186,10 @@ private struct WelcomeStep: View {
     @State private var float = false
     @State private var glow = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Shrink the bottles when the text is large, so the words keep their room.
+    private var bottleScale: CGFloat { typeSize >= .xxLarge ? 0.68 : 1 }
 
     var body: some View {
         ZStack {
@@ -185,11 +202,12 @@ private struct WelcomeStep: View {
                 .blur(radius: 80)
                 .offset(y: -160)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 4).repeatForever(autoreverses: true), value: glow)
+            FitScroll {
             VStack(spacing: 22) {
                 Spacer()
                 HStack(alignment: .bottom, spacing: -14) {
                     ForEach(Array(previewWines.prefix(3).enumerated()), id: \.offset) { index, wine in
-                        BottleArtView(wine: wine, height: index == 1 ? 250 : 200)
+                        BottleArtView(wine: wine, height: (index == 1 ? 250 : 200) * bottleScale)
                             .rotationEffect(.degrees(appear ? Double(index - 1) * 5 : 0), anchor: .bottom)
                             .offset(y: appear ? 0 : 70)
                             .opacity(appear ? 1 : 0)
@@ -222,6 +240,9 @@ private struct WelcomeStep: View {
                     .padding(.bottom, 24)
                     .entrance(3, base: 0.45)
             }
+            .padding(.horizontal, 20)
+            .multilineTextAlignment(.center)
+            }
         }
         .onAppear {
             appear = true
@@ -248,6 +269,7 @@ private struct AgeGateStep: View {
     @State private var declined = false
 
     var body: some View {
+        FitScroll {
         VStack(spacing: 22) {
             Spacer()
             Image(systemName: declined ? "hand.raised.fill" : "person.badge.shield.checkmark")
@@ -297,6 +319,7 @@ private struct AgeGateStep: View {
         }
         .padding(28)
         .padding(.top, 30)
+        }
         .animation(.smooth(duration: 0.35), value: declined)
         .animation(.snappy(duration: 0.25), value: acceptsTerms)
         .sensoryFeedback(.selection, trigger: acceptsTerms)
@@ -330,6 +353,7 @@ private struct IntroStep: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        FitScroll {
         VStack(spacing: 24) {
             Spacer()
             ZStack {
@@ -361,6 +385,8 @@ private struct IntroStep: View {
             Button("Continue", action: next).buttonStyle(.primary).entrance(4)
         }
         .padding(28)
+        .padding(.top, 30)
+        }
         .task {
             try? await Task.sleep(for: .seconds(0.45))
             animate = true
@@ -388,7 +414,9 @@ private struct CellarPreviewStep: View {
                     .transition(.opacity)
                 }
             }
-            .frame(maxHeight: .infinity)
+            // The shelves are decoration: on a short screen they're cropped so the words and button fit.
+            .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
+            .clipped()
             .animation(.easeInOut(duration: 0.8), value: bottles.isEmpty)
             VStack(spacing: 14) {
                 Text("Cellar").eyebrow().entrance(0)
@@ -398,6 +426,7 @@ private struct CellarPreviewStep: View {
                 Button("Continue", action: next).buttonStyle(.primary).padding(.top, 6).entrance(3)
             }
             .padding(28)
+            .fixedSize(horizontal: false, vertical: true)
             .background(Palette.cream)
         }
         .ignoresSafeArea(edges: .top)
@@ -606,6 +635,7 @@ private struct InviteStep: View {
     @FocusState private var focused: Bool
 
     var body: some View {
+        FitScroll {
         VStack(spacing: 22) {
             Spacer().frame(height: 40)
             Image(systemName: "envelope.open.fill")
@@ -661,6 +691,7 @@ private struct InviteStep: View {
                 .entrance(6)
         }
         .padding(28)
+        }
         .animation(.smooth(duration: 0.3), value: error)
         .sensoryFeedback(.error, trigger: attempts)
         .task {
@@ -732,14 +763,21 @@ private struct Shake: GeometryEffect {
 private struct TastesStep: View {
     @Binding var selection: Set<WineType>
     var next: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Two columns normally; one when large text would squeeze the names.
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize >= .xxLarge ? 1 : 2)
+    }
 
     var body: some View {
+        FitScroll {
         VStack(alignment: .leading, spacing: 20) {
             Spacer().frame(height: 56)
             Text("Your palate").eyebrow().entrance(0)
             Text("What do you love to drink?").font(Typo.title).entrance(1)
             Text("We'll use this to tune your recommendations.").foregroundStyle(Palette.secondaryText).entrance(2)
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Array(WineType.allCases.enumerated()), id: \.element) { index, type in
                     let isOn = selection.contains(type)
                     Button {
@@ -776,6 +814,7 @@ private struct TastesStep: View {
                 .entrance(7)
         }
         .padding(28)
+        }
         .sensoryFeedback(.selection, trigger: selection)
     }
 }

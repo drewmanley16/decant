@@ -32,6 +32,9 @@ struct DecantApp: App {
             RootView()
                 .environment(env)
                 .tint(Palette.burgundy)
+                // Large text stays large, but the very largest accessibility sizes
+                // can't be laid out on a phone screen, so stop there.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .task {
                     AppDelegate.environment = env
                     await env.bootstrap()

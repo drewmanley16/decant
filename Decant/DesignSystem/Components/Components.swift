@@ -399,3 +399,21 @@ extension Date {
         formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
     }
 }
+
+/// Fills the screen like a plain stack (so Spacers still push content apart on
+/// roomy phones) but scrolls when the content is taller than the screen — small
+/// phones such as the iPhone SE, or large Dynamic Type sizes.
+struct FitScroll<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        GeometryReader { geo in
+            ScrollView {
+                content
+                    .frame(maxWidth: .infinity, minHeight: geo.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+}
