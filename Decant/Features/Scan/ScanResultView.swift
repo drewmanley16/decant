@@ -239,7 +239,10 @@ struct ManualEntryView: View {
         .background(Palette.cream.ignoresSafeArea())
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: step)
         .sensoryFeedback(.impact(weight: .light), trigger: step)
-        .onChange(of: step) { focus = nil }
+        .onChange(of: step, initial: true) { _, step in
+            focus = nil
+            Telemetry.track("add_wine_step", ["step": "\(step)", "from_label": draft.source == .label ? "yes" : "no"])
+        }
         .navigationTitle("Add a wine")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

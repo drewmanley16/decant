@@ -123,6 +123,7 @@ final class AppEnvironment {
     func bootstrap() async {
         currentUser = await auth.restoreSession()
         phase = currentUser != nil && onboardingComplete && !needsInvite ? .ready : .onboarding
+        Telemetry.track("app_open", ["signed_in": currentUser != nil ? "yes" : "no", "phase": "\(phase)"])
         if phase == .ready { await registerForPushIfAllowed() }
     }
 
@@ -179,6 +180,7 @@ final class AppEnvironment {
     }
 
     func finishOnboarding() {
+        Telemetry.track("onboarding_done")
         onboardingComplete = true
         withAnimation(.smooth) { phase = .ready }
         Task { await requestPushPermission() }
@@ -203,6 +205,9 @@ final class AppEnvironment {
 
     func show(_ message: String, symbol: String = "checkmark.circle.fill") {
         toast = Toast(message: message, symbol: symbol)
+        if symbol.contains("exclamationmark") || symbol.contains("xmark") {
+            Telemetry.track("error_shown", ["message": message, "tab": "\(selectedTab)"])
+        }
     }
 }
 

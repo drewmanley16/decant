@@ -35,10 +35,13 @@ final class ScanViewModel {
     func process(_ image: UIImage) async {
         phase = .processing(image)
         processingStep = 0
+        Telemetry.track("scan_started")
+        let start = ContinuousClock.now
         do {
             let (processed, lines) = try await LabelImageProcessor.process(image)
             guard !lines.isEmpty else {
                 phase = .noText(processed)
+                Telemetry.track("scan_result", ["outcome": "no_text"])
                 return
             }
             processingStep = 1
@@ -50,8 +53,13 @@ final class ScanViewModel {
             processingStep = 2
             try? await Task.sleep(for: .milliseconds(350)) // let the final step register visually
             phase = .result(ScanOutcome(scanID: UUID(), labelImage: processed, capture: capture, result: result, scanKey: scanKey))
+            let seconds = (ContinuousClock.now - start).components.seconds
+            Telemetry.track("scan_result", ["outcome": result.candidates.isEmpty ? "no_match" : "matched",
+                                            "confidence": result.best.map { "\($0.confidence)" } ?? "none",
+                                            "engine": "\(result.engine)", "seconds": String(seconds)])
         } catch {
             phase = .failed(error.localizedDescription)
+            Telemetry.track("scan_result", ["outcome": "error", "error": error.localizedDescription])
         }
     }
 
@@ -80,6 +88,7 @@ final class ScanViewModel {
     /// User entered or corrected the details manually.
     func confirmManual(_ draft: WineDraft, outcome: ScanOutcome?) async -> Wine? {
         guard let created = await create(draft, outcome: outcome) else { return nil }
+        Telemetry.track("wine_added", ["from_scan": outcome != nil ? "yes" : "no"])
         guard let outcome else {
             env.show("Wine added")
             return created

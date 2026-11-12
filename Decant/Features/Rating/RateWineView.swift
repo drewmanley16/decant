@@ -69,10 +69,16 @@ private struct QuickLogFlow: View {
         }
         .background(Palette.cream.ignoresSafeArea())
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: step)
-        .onChange(of: step) { typing = false }
+        .onChange(of: step, initial: true) { _, step in
+            typing = false
+            Telemetry.track("log_step", ["step": "\(step)"])
+        }
         .interactiveDismissDisabled(isDirty || saving)
         .confirmationDialog("Discard this tasting?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { dismiss() }
+            Button("Discard", role: .destructive) {
+                Telemetry.track("log_abandoned", ["step": "\(step)"])
+                dismiss()
+            }
             Button("Keep going", role: .cancel) {}
         }
         .task {
@@ -91,7 +97,12 @@ private struct QuickLogFlow: View {
 
     private var header: some View {
         HStack(spacing: 14) {
-            Button { isDirty ? (confirmsDiscard = true) : dismiss() } label: {
+            Button {
+                if isDirty { confirmsDiscard = true } else {
+                    Telemetry.track("log_abandoned", ["step": "\(step)", "empty": "yes"])
+                    dismiss()
+                }
+            } label: {
                 Image(systemName: "xmark")
                     .font(.body.weight(.semibold))
                     .frame(width: 38, height: 38)
@@ -435,6 +446,9 @@ private struct QuickLogFlow: View {
             }
             let entry = try await env.tastings.addEntry(for: wine.id, draft: final)
             didSave = true
+            Telemetry.track("log_saved", ["step": "\(step)", "rated": final.rating != nil ? "yes" : "no",
+                                          "review": final.review.nilIfBlank != nil ? "yes" : "no",
+                                          "photos": String(final.photoPaths.count), "cellar": final.addToCellar ? "yes" : "no"])
             if final.addToCellar {
                 _ = try await env.cellar.addBottle(wineID: wine.id, draft: CellarBottleDraft())
                 env.cellarRevision += 1
@@ -448,6 +462,7 @@ private struct QuickLogFlow: View {
             }
         } catch {
             self.error = error.localizedDescription
+            Telemetry.track("log_failed", ["step": "\(step)", "error": error.localizedDescription])
         }
     }
 }

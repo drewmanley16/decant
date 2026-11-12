@@ -27,6 +27,8 @@ struct DecantApp: App {
         bar.scrollEdgeAppearance = atRest
     }
 
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -43,6 +45,10 @@ struct DecantApp: App {
                     #endif
                 }
                 .onOpenURL { env.open($0) }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Send buffered events before iOS suspends the app.
+            if phase == .background { Task { await Telemetry.shared.flush() } }
         }
     }
 }

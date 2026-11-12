@@ -9,11 +9,23 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
     let baseURL: URL
     /// Local-only state (recently viewed, label text cache, offline snapshots).
     private let local: LocalStore
+    /// Wines and profiles are shared by every screen; keeping them briefly avoids refetching
+    /// the same rows each time a feed, review list or wine page opens.
+    private let wineCache = TimedCache<UUID, Wine>(lifetime: 10 * 60)
+    private let profileCache = TimedCache<UUID, Profile>(lifetime: 5 * 60)
+    private let sampleCache = TimedCache<Int, [Wine]>(lifetime: 15 * 60)
+    private static let sampleFile = LocalFiles.root.appendingPathComponent("catalog-sample.json")
 
     init(url: URL, anonKey: String, local: LocalStore = LocalStore(fileURL: LocalFiles.root.appendingPathComponent("supabase-cache.json"))) {
         self.baseURL = url
         self.client = SupabaseClient(supabaseURL: url, supabaseKey: anonKey)
         self.local = local
+        let client = self.client
+        Task {
+            await Telemetry.shared.configure { events in
+                try await client.from("app_events").insert(events).execute()
+            }
+        }
     }
 
     /// Resolves stored image paths ("bucket/uid/file.jpg") to URLs.
@@ -45,9 +57,34 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         return AppError.server(error.localizedDescription)
     }
 
+    /// Every server call goes through here, so failures and slow calls are tracked in one place,
+    /// including the ones screens deliberately ignore with `try?`.
     @discardableResult
-    private func run<T>(_ body: () async throws -> T) async throws -> T {
-        do { return try await body() } catch { throw mapError(error) }
+    private func run<T>(_ operation: String = #function, _ body: () async throws -> T) async throws -> T {
+        let start = ContinuousClock.now
+        do {
+            let result = try await body()
+            let ms = Self.milliseconds(since: start)
+            if ms >= 1500 { Telemetry.track("slow_call", ["op": Self.opName(operation), "ms": String(ms)]) }
+            return result
+        } catch {
+            let mapped = mapError(error)
+            if !(error is CancellationError), (error as? URLError)?.code != .cancelled {
+                Telemetry.track("api_error", ["op": Self.opName(operation), "error": mapped.localizedDescription,
+                                              "ms": String(Self.milliseconds(since: start))])
+            }
+            throw mapped
+        }
+    }
+
+    private static func milliseconds(since start: ContinuousClock.Instant) -> Int {
+        let elapsed = ContinuousClock.now - start
+        return Int(elapsed.components.seconds * 1000 + elapsed.components.attoseconds / 1_000_000_000_000_000)
+    }
+
+    /// "search(_:limit:)" → "search"
+    private static func opName(_ function: String) -> String {
+        String(function.prefix { $0 != "(" })
     }
 
     // MARK: - AuthService
@@ -108,7 +145,9 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
             do {
                 let data = try await client.from("profiles").update(update).eq("id", value: profile.id.uuidString)
                     .select().single().execute().data
-                return try decode(ProfileRow.self, data).profile
+                let saved = try decode(ProfileRow.self, data).profile
+                await profileCache.store(saved, for: saved.id)
+                return saved
             } catch let error as PostgrestError where error.code == "23505" {
                 throw AppError.validation("That username is taken.")
             } catch let error as PostgrestError where error.code == "23514" {
@@ -190,15 +229,25 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
                                       country_filter: query.country, region_filter: query.region, grape_filter: query.grape,
                                       vintage_filter: query.vintage, max_price: query.maxPrice, min_rating: query.minRating, lim: limit)
             let data = try await client.rpc("search_wines", params: params).execute().data
-            return try decode([WineCatalogRow].self, data).map(\.wine)
+            let wines = try decode([WineCatalogRow].self, data).map(\.wine)
+            await remember(wines)
+            return wines
         }
     }
 
     private func wines(ids: [UUID]) async throws -> [UUID: Wine] {
         guard !ids.isEmpty else { return [:] }
-        let unique = Array(Set(ids)).map(\.uuidString)
-        let data = try await client.from("wine_catalog").select().in("id", values: unique).execute().data
-        return Dictionary(try decode([WineCatalogRow].self, data).map { ($0.id, $0.wine) }, uniquingKeysWith: { a, _ in a })
+        var (found, missing) = await wineCache.lookup(ids)
+        guard !missing.isEmpty else { return found }
+        let data = try await client.from("wine_catalog").select().in("id", values: missing.map(\.uuidString)).execute().data
+        let fetched = Dictionary(try decode([WineCatalogRow].self, data).map { ($0.id, $0.wine) }, uniquingKeysWith: { a, _ in a })
+        await wineCache.store(fetched)
+        found.merge(fetched) { a, _ in a }
+        return found
+    }
+
+    private func remember(_ wines: [Wine]) async {
+        await wineCache.store(Dictionary(wines.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a }))
     }
 
     func wine(id: UUID) async throws -> Wine {
@@ -216,11 +265,40 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         }
     }
 
+    /// The wines Discover recommends from: the most-rated first, padded with the wider catalog.
+    /// Served from memory, then from the last copy on disk (refreshed in the background),
+    /// so Discover opens instantly after the first launch.
     func catalogSample(limit: Int) async throws -> [Wine] {
+        if let cached = await sampleCache.value(for: limit) { return cached }
+        if let data = try? Data(contentsOf: Self.sampleFile),
+           let stored = try? JSONDecoder().decode([Wine].self, from: data), stored.count >= min(limit, 20) {
+            await sampleCache.store(stored, for: limit)
+            Task { _ = try? await self.fetchCatalogSample(limit: limit) }
+            return stored
+        }
+        return try await fetchCatalogSample(limit: limit)
+    }
+
+    private struct RatedRow: Decodable { var vintageId: UUID }
+
+    /// Ordering the whole catalog view by rating count meant sorting every wine (0.6–4s).
+    /// Only a handful of wines have ratings, so fetch those ids first, then pad.
+    private func fetchCatalogSample(limit: Int) async throws -> [Wine] {
         try await run {
-            let data = try await client.from("wine_catalog").select()
+            let ratedData = try await client.from("wine_rating_stats").select("vintage_id")
                 .order("ratings_count", ascending: false).limit(limit).execute().data
-            return try decode([WineCatalogRow].self, data).map(\.wine)
+            let ratedIDs = try decode([RatedRow].self, ratedData).map(\.vintageId)
+            let rated = try await wines(ids: ratedIDs)
+            var sample = ratedIDs.compactMap { rated[$0] }
+            if sample.count < limit {
+                let padData = try await client.from("wine_catalog").select().limit(limit).execute().data
+                let seen = Set(sample.map(\.id))
+                let pad = try decode([WineCatalogRow].self, padData).map(\.wine).filter { !seen.contains($0.id) }
+                sample += pad.prefix(limit - sample.count)
+            }
+            await sampleCache.store(sample, for: limit)
+            if let data = try? JSONEncoder().encode(sample) { try? data.write(to: Self.sampleFile, options: .atomic) }
+            return sample
         }
     }
 
@@ -275,6 +353,7 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         let objectPath = path.hasPrefix("labels/") ? String(path.dropFirst("labels/".count)) : path
         try await run {
             try await client.rpc("set_vintage_label", params: LabelParams(target_vintage: wineID, path: objectPath)).execute()
+            await wineCache.remove(wineID)
         }
     }
 
@@ -327,14 +406,20 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
 
     private func profiles(ids: [UUID]) async throws -> [UUID: Profile] {
         guard !ids.isEmpty else { return [:] }
-        let data = try await client.from("profiles").select().in("id", values: Array(Set(ids)).map(\.uuidString)).execute().data
-        return Dictionary(try decode([ProfileRow].self, data).map { ($0.id, $0.profile) }, uniquingKeysWith: { a, _ in a })
+        var (found, missing) = await profileCache.lookup(ids)
+        guard !missing.isEmpty else { return found }
+        let data = try await client.from("profiles").select().in("id", values: missing.map(\.uuidString)).execute().data
+        let fetched = Dictionary(try decode([ProfileRow].self, data).map { ($0.id, $0.profile) }, uniquingKeysWith: { a, _ in a })
+        await profileCache.store(fetched)
+        found.merge(fetched) { a, _ in a }
+        return found
     }
 
     private static let entryColumns = "id,user_id,vintage_id,rating,consumed_on,location,occasion,drink_again,is_favorite,visibility,tagged_user_ids,photo_paths,created_at"
 
     func addEntry(for wineID: UUID, draft: TastingDraft) async throws -> TastingEntry {
         let userID = try await me()
+        await wineCache.remove(wineID) // its average rating changes
         return try await run {
             let insert = TastingInsert(
                 userId: userID, vintageId: wineID, rating: draft.rating.map(TastingEntry.normalizedRating),
@@ -377,6 +462,7 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
     }
 
     func updateEntry(_ entry: TastingEntry) async throws {
+        await wineCache.remove(entry.wineID)
         try await run {
             try await client.from("tasting_entries").update(EntryUpdate(entry: entry)).eq("id", value: entry.id.uuidString).execute()
             if let review = entry.review?.nilIfBlank {

@@ -48,6 +48,9 @@ struct OnboardingFlow: View {
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.25) : .smooth(duration: 0.55, extraBounce: 0.02), value: step)
         .sensoryFeedback(.impact(weight: .light), trigger: step)
+        .onChange(of: step, initial: true) { _, step in
+            Telemetry.track("onboarding_step", ["step": "\(step)", "signed_in": env.currentUser != nil ? "yes" : "no"])
+        }
         .onChange(of: env.currentUser?.id) { _, id in
             // Signed out from a later step (e.g. "Use a different account").
             if id == nil, step.rawValue > Step.signIn.rawValue { go(to: .signIn, forward: false) }
@@ -582,14 +585,17 @@ private struct SignInStep: View {
                 return
             }
             let name = [credential.fullName?.givenName, credential.fullName?.familyName].compactMap { $0 }.joined(separator: " ")
-            await run { try await env.auth.signInWithApple(idToken: token, nonce: nonce, fullName: name.nilIfBlank) }
+            await run("apple") { try await env.auth.signInWithApple(idToken: token, nonce: nonce, fullName: name.nilIfBlank) }
         case .failure(let failure):
-            if (failure as? ASAuthorizationError)?.code != .canceled { error = failure.localizedDescription }
+            if (failure as? ASAuthorizationError)?.code != .canceled {
+                error = failure.localizedDescription
+                Telemetry.track("sign_in_failed", ["method": "apple", "error": failure.localizedDescription])
+            }
         }
     }
 
     private func emailAuth() async {
-        await run {
+        await run(isSignUp ? "email_signup" : "email") {
             isSignUp
                 ? try await env.auth.signUp(email: email, password: password, username: username.lowercased())
                 : try await env.auth.signIn(email: email, password: password)
@@ -597,19 +603,21 @@ private struct SignInStep: View {
     }
 
     private func startLocal() async {
-        await run { try await env.auth.startLocalSession(username: localName, displayName: localName) }
+        await run("local") { try await env.auth.startLocalSession(username: localName, displayName: localName) }
     }
 
-    private func run(_ body: () async throws -> Profile) async {
+    private func run(_ method: String, _ body: () async throws -> Profile) async {
         busy = true
         error = nil
         defer { busy = false }
         do {
             env.didSignIn(try await body())
+            Telemetry.track("signed_in", ["method": method])
             await env.auth.recordTermsAcceptance()
             next()
         } catch {
             self.error = error.localizedDescription
+            Telemetry.track("sign_in_failed", ["method": method, "error": error.localizedDescription])
         }
     }
 
@@ -716,11 +724,13 @@ private struct InviteStep: View {
         defer { busy = false }
         do {
             env.currentUser = try await env.auth.redeemInvite(code)
+            Telemetry.track("invite_redeemed")
             focused = false
             env.show("Welcome to Decant", symbol: "party.popper.fill")
             next()
         } catch {
             self.error = error.localizedDescription
+            Telemetry.track("invite_failed", ["error": error.localizedDescription])
             withAnimation(.default) { attempts += 1 }
         }
     }

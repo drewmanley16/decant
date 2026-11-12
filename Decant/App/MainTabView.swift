@@ -26,6 +26,7 @@ struct MainTabView: View {
             }
             .contentMargins(.bottom, 28, for: .scrollContent)
             .onChange(of: env.selectedTab) { old, new in
+                if new != .scan { Telemetry.track("tab_view", ["tab": "\(new)"]) }
                 // The Scan tab is an action, not a destination.
                 if new == .scan {
                     env.selectedTab = old

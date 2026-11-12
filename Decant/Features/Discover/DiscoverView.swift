@@ -24,9 +24,11 @@ final class DiscoverViewModel {
             async let feedTask = env.social.feed(before: nil, limit: 30)
             async let recentTask = try? env.catalog.recentlyViewed(limit: 10)
             async let notificationsTask = try? env.social.notifications()
-            let (catalog, feedItems) = try await (catalogTask, feedTask)
             let me = env.currentUser?.id
-            let mine: [ReviewItem] = me != nil ? ((try? await env.tastings.entries(forUser: me!)) ?? []) : []
+            // Fetched alongside the rest instead of after it.
+            async let mineTask: [ReviewItem]? = me != nil ? try? env.tastings.entries(forUser: me!) : nil
+            let (catalog, feedItems) = try await (catalogTask, feedTask)
+            let mine = await mineTask ?? []
             let friendActivity = feedItems.compactMap { item -> ReviewItem? in
                 guard item.actor.id != me, let wine = item.wine, let entry = item.entry else { return nil }
                 return ReviewItem(entry: entry, author: item.actor, wine: wine)
