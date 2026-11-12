@@ -73,6 +73,7 @@ private struct ProfileContent: View {
     @State private var editing = false
     @State private var invite: InviteStatus?
     @State private var editingEntry: ReviewItem?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ScrollView {
@@ -222,7 +223,12 @@ private struct ProfileContent: View {
     }
 
     private var shortcuts: some View {
-        HStack(spacing: 10) {
+        // Three tiles side by side leave ~90pt each, which splits "Milestones"
+        // mid-word at accessibility sizes — stack them instead.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 10))
+            : AnyLayout(HStackLayout(spacing: 10))
+        return layout {
             shortcut("Wishlist", "bookmark.fill", .wishlist, value: shortcutCounts.map { "\($0.wishlist)" })
             shortcut("Scans", "viewfinder", .scanHistory, value: shortcutCounts.map { "\($0.scans)" })
             shortcut("Milestones", "rosette", .milestones, value: shortcutCounts?.milestones)
@@ -230,8 +236,11 @@ private struct ProfileContent: View {
     }
 
     private func shortcut(_ title: String, _ symbol: String, _ route: Route, value: String?) -> some View {
-        NavigationLink(value: route) {
-            VStack(alignment: .leading, spacing: 10) {
+        let tileLayout = typeSize.isAccessibilitySize
+            ? AnyLayout(HStackLayout(spacing: 14))
+            : AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+        return NavigationLink(value: route) {
+            tileLayout {
                 Image(systemName: symbol)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.burgundy)
@@ -260,11 +269,18 @@ private struct ProfileContent: View {
                     Spacer()
                     if isMe { Image(systemName: "chevron.right").foregroundStyle(Palette.secondaryText) }
                 }
-                HStack(spacing: 0) {
-                    statCell("\(stats.uniqueWines)", "Wines")
-                    statCell("\(stats.uniqueWineries)", "Wineries")
-                    statCell("\(stats.countries.count)", "Countries")
-                    statCell(stats.averageRating.map { $0.formatted(.number.precision(.fractionLength(1))) } ?? "–", "Avg ★")
+                let cells = [
+                    ("\(stats.uniqueWines)", "Wines"),
+                    ("\(stats.uniqueWineries)", "Wineries"),
+                    ("\(stats.countries.count)", "Countries"),
+                    (stats.averageRating.map { $0.formatted(.number.precision(.fractionLength(1))) } ?? "–", "Avg ★"),
+                ]
+                // Four across at accessibility sizes breaks "Wineries" and
+                // "Countries" mid-word, so use a 2×2 grid there.
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0),
+                                         count: typeSize.isAccessibilitySize ? 2 : 4),
+                          spacing: 14) {
+                    ForEach(cells, id: \.1) { statCell($0.0, $0.1) }
                 }
             }
             .foregroundStyle(Palette.charcoal)
@@ -299,11 +315,14 @@ private struct ProfileContent: View {
                                 Text(item.entry.consumedOn.formatted(.dateTime.day())).font(.system(.title3, design: .serif).weight(.semibold))
                             }
                             .foregroundStyle(Palette.burgundy)
-                            .frame(width: 40)
+                            .fixedSize()
+                            .frame(minWidth: 40)
                             BottleArtView(wine: item.wine, height: 60).frame(width: 26)
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(item.wine.displayName).font(.system(.subheadline, design: .serif).weight(.semibold)).lineLimit(1)
-                                Text(item.wine.producer).font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
+                                Text(item.wine.displayName).font(.system(.subheadline, design: .serif).weight(.semibold))
+                                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
+                                Text(item.wine.producer).font(.caption).foregroundStyle(Palette.secondaryText)
+                                    .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                                 HStack(spacing: 6) {
                                     if let r = item.entry.rating { StarRatingView(rating: r, size: 10) }
                                     if item.entry.isFavorite { Image(systemName: "heart.fill").font(.caption2).foregroundStyle(Palette.burgundy) }

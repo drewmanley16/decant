@@ -32,6 +32,7 @@ private struct WineDetailContent: View {
     var origin: WineDetailView.Origin
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showRate = false
     @State private var showAddToCellar = false
     @State private var showShare = false
@@ -146,28 +147,42 @@ private struct WineDetailContent: View {
     }
 
     private var actions: some View {
-        HStack(spacing: 10) {
+        // At accessibility sizes the main button gets its own full-width row and
+        // the three small actions share the row below, so nothing gets squeezed.
+        let large = typeSize.isAccessibilitySize
+        let layout = large
+            ? AnyLayout(VStackLayout(spacing: 10))
+            : AnyLayout(HStackLayout(spacing: 10))
+        return layout {
             Button { showRate = true } label: {
                 Label(model.myEntries.isEmpty ? "Rate" : "Log again", systemImage: "star.fill")
+                    .frame(maxWidth: large ? .infinity : nil)
             }
             .buttonStyle(.primary)
-            actionButton(model.cellarQuantity > 0 ? "\(model.cellarQuantity) in cellar" : "Cellar",
-                         symbol: model.cellarQuantity > 0 ? "square.stack.3d.up.fill" : "square.stack.3d.up") { showAddToCellar = true }
-            actionButton("Wishlist", symbol: model.isWishlisted ? "bookmark.fill" : "bookmark") { Task { await model.toggleWishlist() } }
-            actionButton("Share", symbol: "paperplane") { showShare = true }
+            HStack(spacing: 10) {
+                actionButton(model.cellarQuantity > 0 ? "\(model.cellarQuantity) in cellar" : "Cellar",
+                             symbol: model.cellarQuantity > 0 ? "square.stack.3d.up.fill" : "square.stack.3d.up") { showAddToCellar = true }
+                actionButton("Wishlist", symbol: model.isWishlisted ? "bookmark.fill" : "bookmark") { Task { await model.toggleWishlist() } }
+                actionButton("Share", symbol: "paperplane") { showShare = true }
+            }
         }
         .padding(.horizontal, Metrics.gutter)
         .sensoryFeedback(.selection, trigger: model.isWishlisted)
     }
 
     private func actionButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        let large = typeSize.isAccessibilitySize
+        return Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.headline)
-                Text(title).font(.caption2.weight(.medium)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(.caption2.weight(.medium))
+                    .lineLimit(large ? 2 : 1).minimumScaleFactor(0.8)
+                    .multilineTextAlignment(.center)
             }
             .foregroundStyle(Palette.burgundy)
-            .frame(width: 70, height: 52)
+            .padding(.vertical, large ? 10 : 0)
+            .frame(width: large ? nil : 70, height: large ? nil : 52)
+            .frame(maxWidth: large ? .infinity : nil, minHeight: 52)
             .background(Palette.burgundy.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .accessibilityLabel(title)

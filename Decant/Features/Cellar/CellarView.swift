@@ -196,6 +196,7 @@ private struct CellarContent: View {
 private struct CellarHistoryGrid: View {
     var history: [HistoryWine]
     @Environment(AppEnvironment.self) private var env
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ScrollView {
@@ -204,7 +205,7 @@ private struct CellarHistoryGrid: View {
                                message: "Every wine you rate is collected here — a museum of every bottle you've tried.",
                                actionTitle: "Scan a wine") { env.isScannerPresented = true }
             } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 14)], spacing: 18) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 150 : 104), spacing: 14, alignment: .top)], spacing: 18) {
                     ForEach(history) { item in
                         NavigationLink(value: Route.wine(item.wine)) {
                             VStack(spacing: 6) {
@@ -217,7 +218,10 @@ private struct CellarHistoryGrid: View {
                                         Image(systemName: "heart.fill").font(.caption).foregroundStyle(Palette.burgundy).padding(8)
                                     }
                                 }
-                                Text(item.wine.name).font(.caption.weight(.semibold)).lineLimit(1).foregroundStyle(Palette.charcoal)
+                                Text(item.wine.name).font(.caption.weight(.semibold))
+                                    .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundStyle(Palette.charcoal)
                                 if let rating = item.bestRating { StarRatingView(rating: rating, size: 9) }
                                 Text(item.timesTasted > 1 ? "Tasted \(item.timesTasted)×" : item.lastTasted.formatted(date: .abbreviated, time: .omitted))
                                     .font(.caption2).foregroundStyle(Palette.secondaryText)

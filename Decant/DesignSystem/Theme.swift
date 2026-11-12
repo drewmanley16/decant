@@ -106,6 +106,7 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.headline)
             .foregroundStyle(.white)
+            .padding(.horizontal, 14)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(fill, in: Capsule())
             .opacity(configuration.isPressed ? 0.85 : 1)

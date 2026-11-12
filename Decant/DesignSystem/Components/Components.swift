@@ -59,44 +59,76 @@ struct WineCard: View {
     }
 }
 
-/// Full-width list row.
+/// Full-width list row. At accessibility text sizes the rating moves under the
+/// text so the name gets the full width instead of breaking mid-word.
 struct WineRow: View {
     var wine: Wine
     var trailing: String?
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private var isLarge: Bool { typeSize.isAccessibilitySize }
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(alignment: isLarge ? .top : .center, spacing: 14) {
             BottleArtView(wine: wine, height: 74)
                 .frame(width: 34)
             VStack(alignment: .leading, spacing: 3) {
                 Text(wine.name)
                     .font(.system(.body, design: .serif).weight(.semibold))
                     .foregroundStyle(Palette.charcoal)
-                    .lineLimit(2)
+                    .lineLimit(isLarge ? 4 : 2)
                 Text("\(wine.producer) · \(wine.vintageLabel)")
                     .font(.subheadline)
                     .foregroundStyle(Palette.secondaryText)
-                    .lineLimit(1)
-                HStack(spacing: 8) {
-                    TypeDot(type: wine.type)
-                    if !wine.locationLine.isEmpty {
-                        Text(wine.locationLine).font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
-                    }
-                }
+                    .lineLimit(isLarge ? 3 : 1)
+                TypeAndPlace(wine: wine)
+                if isLarge { trailingInfo(alignment: .leading).padding(.top, 2) }
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 4) {
-                RatingPill(rating: wine.communityRating, count: nil)
-                if let trailing {
-                    Text(trailing).font(.caption).foregroundStyle(Palette.secondaryText)
-                } else if let price = wine.price {
-                    Text(price.formatted).font(.caption).foregroundStyle(Palette.secondaryText)
-                }
+            if !isLarge {
+                Spacer(minLength: 8)
+                trailingInfo(alignment: .trailing)
             }
         }
         .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private func trailingInfo(alignment: HorizontalAlignment) -> some View {
+        let stack = alignment == .leading
+            ? AnyLayout(HStackLayout(spacing: 8))
+            : AnyLayout(VStackLayout(alignment: .trailing, spacing: 4))
+        stack {
+            RatingPill(rating: wine.communityRating, count: nil)
+            if let trailing {
+                Text(trailing).font(.caption).foregroundStyle(Palette.secondaryText)
+            } else if let price = wine.price {
+                Text(price.formatted).font(.caption).foregroundStyle(Palette.secondaryText)
+            }
+        }
+    }
+}
+
+/// Wine type dot plus region, side by side; stacks at accessibility sizes so
+/// neither label gets squeezed into broken words.
+struct TypeAndPlace: View {
+    var wine: Wine
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+            : AnyLayout(HStackLayout(spacing: 8))
+        layout {
+            TypeDot(type: wine.type)
+            if !wine.locationLine.isEmpty {
+                Text(wine.locationLine).font(.caption).foregroundStyle(Palette.secondaryText)
+                    .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
+            }
+        }
     }
 }
 
@@ -108,6 +140,7 @@ struct TypeDot: View {
             Circle().fill(Palette.wineColor(type)).frame(width: 8, height: 8)
                 .overlay(Circle().strokeBorder(.white.opacity(0.4), lineWidth: 0.5))
             Text(type.displayName).font(.caption.weight(.medium)).foregroundStyle(Palette.secondaryText)
+                .lineLimit(1).fixedSize()
         }
     }
 }

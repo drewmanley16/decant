@@ -5,24 +5,28 @@ struct ReviewCard: View {
     var item: ReviewItem
     var showsWine = true
     var onLike: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                NavigationLink(value: Route.user(item.author.id)) {
-                    HStack(spacing: 10) {
-                        AvatarView(profile: item.author, size: 38)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(item.author.displayName).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.charcoal)
-                            Text("@\(item.author.username) · \(item.entry.createdAt.relativeShort)")
-                                .font(.caption).foregroundStyle(Palette.secondaryText)
-                        }
+            if typeSize.isAccessibilitySize {
+                // Stars get their own line so the name isn't squeezed into a
+                // narrow column and broken mid-word.
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 10) {
+                        authorLink
+                        Spacer(minLength: 0)
+                        safetyMenu
                     }
+                    if let rating = item.entry.rating { StarRatingView(rating: rating, size: 12) }
                 }
-                .buttonStyle(.plain)
-                Spacer()
-                if let rating = item.entry.rating { StarRatingView(rating: rating, size: 12) }
-                SafetyMenu(target: .entry(id: item.id, author: item.author.id), authorName: "@\(item.author.username)")
+            } else {
+                HStack(spacing: 10) {
+                    authorLink
+                    Spacer()
+                    if let rating = item.entry.rating { StarRatingView(rating: rating, size: 12) }
+                    safetyMenu
+                }
             }
 
             if showsWine {
@@ -89,6 +93,24 @@ struct ReviewCard: View {
             .buttonStyle(.plain)
         }
         .cardSurface()
+    }
+
+    private var authorLink: some View {
+        NavigationLink(value: Route.user(item.author.id)) {
+            HStack(spacing: 10) {
+                AvatarView(profile: item.author, size: 38)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(item.author.displayName).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.charcoal)
+                    Text("@\(item.author.username) · \(item.entry.createdAt.relativeShort)")
+                        .font(.caption).foregroundStyle(Palette.secondaryText)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var safetyMenu: some View {
+        SafetyMenu(target: .entry(id: item.id, author: item.author.id), authorName: "@\(item.author.username)")
     }
 }
 

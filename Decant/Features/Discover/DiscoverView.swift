@@ -266,13 +266,22 @@ private struct FeaturedWineSection: View {
 
 private struct FeaturedWineCard: View {
     var wine: Wine
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private var isLarge: Bool { typeSize.isAccessibilitySize }
 
     var body: some View {
-        HStack(spacing: 18) {
+        // At accessibility sizes the bottle sits above the text so the name,
+        // producer and region can use the card's full width.
+        let layout = isLarge
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
+            : AnyLayout(HStackLayout(spacing: 18))
+        layout {
             BottleStage(tint: Palette.wineColor(wine.type)) {
                 BottleArtView(wine: wine, height: 190)
             }
-            .frame(width: 120, height: 220)
+            .frame(width: isLarge ? nil : 120, height: 220)
+            .frame(maxWidth: isLarge ? .infinity : nil)
             .background(Palette.wineColor(wine.type).opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
@@ -281,17 +290,17 @@ private struct FeaturedWineCard: View {
                 Text(wine.name)
                     .font(Typo.title2)
                     .foregroundStyle(Palette.charcoal)
-                    .lineLimit(3)
+                    .lineLimit(isLarge ? 4 : 3)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("\(wine.producer) · \(wine.vintageLabel)")
                     .font(.subheadline)
                     .foregroundStyle(Palette.secondaryText)
-                    .lineLimit(1)
+                    .lineLimit(isLarge ? 3 : 1)
                 if !wine.locationLine.isEmpty {
                     Label(wine.locationLine, systemImage: "mappin.and.ellipse")
                         .font(.caption)
                         .foregroundStyle(Palette.secondaryText)
-                        .lineLimit(1)
+                        .lineLimit(isLarge ? 2 : 1)
                 }
                 Spacer(minLength: 0)
                 HStack {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @Environment(AppEnvironment.self) private var env
+    @State private var isKeyboardVisible = false
 
     var body: some View {
         @Bindable var env = env
@@ -32,8 +33,19 @@ struct MainTabView: View {
                 }
             }
 
-            ScanTabButton { env.isScannerPresented = true }
-                .padding(.bottom, 2)
+            if !isKeyboardVisible {
+                ScanTabButton { env.isScannerPresented = true }
+                    .padding(.bottom, 2)
+                    .transition(.opacity)
+            }
+        }
+        // The tab bar sits behind the keyboard, so the floating Scan button
+        // should too — otherwise it rides up and covers text fields.
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.15)) { isKeyboardVisible = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeIn(duration: 0.15)) { isKeyboardVisible = false }
         }
         .fullScreenCover(isPresented: $env.isScannerPresented) {
             ScanFlowView()

@@ -78,6 +78,7 @@ struct SearchView: View {
 }
 
 private struct SearchContent: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Bindable var model: SearchViewModel
     @State private var showFilters = false
 
@@ -153,7 +154,12 @@ private struct SearchContent: View {
                 .listRowBackground(Color.clear)
         case .loaded(let people):
             ForEach(people) { profile in
-                HStack(spacing: 12) {
+                // At accessibility sizes the Follow button drops below the name
+                // so long usernames don't get split mid-word.
+                let layout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+                    : AnyLayout(HStackLayout(spacing: 12))
+                layout {
                     NavigationLink(value: Route.user(profile.id)) {
                         HStack(spacing: 12) {
                             AvatarView(profile: profile, size: 44)
