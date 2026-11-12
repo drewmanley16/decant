@@ -383,9 +383,22 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         async let reviewsData = client.from("wine_reviews").select("entry_id,user_id,body").in("entry_id", values: entryIDs).execute().data
         async let notesData = client.from("tasting_private_notes").select("entry_id,user_id,notes").in("entry_id", values: entryIDs).execute().data
         async let statsData = client.rpc("entry_stats", params: ["entry_ids": rows.map(\.id)]).execute().data
+        // The newest comments for the feed preview; RLS hides blocked, reported and moderated ones.
+        async let previewData = client.from("review_comments").select(Self.commentColumns).in("entry_id", values: entryIDs)
+            .order("created_at", ascending: false).limit(min(300, rows.count * 4)).execute().data
 
         let wines = try await winesTask
-        let profiles = try await profilesTask
+        var profiles = try await profilesTask
+        let previewRows = (try? decode([CommentRow].self, try await previewData)) ?? []
+        let missingAuthors = Set(previewRows.map(\.userId)).subtracting(profiles.keys)
+        if !missingAuthors.isEmpty {
+            profiles.merge(try await self.profiles(ids: Array(missingAuthors))) { a, _ in a }
+        }
+        var previews: [UUID: [ReviewComment]] = [:]
+        for row in previewRows where (previews[row.entryId]?.count ?? 0) < 2 {
+            guard let author = profiles[row.userId] else { continue }
+            previews[row.entryId, default: []].insert(Self.comment(row, author: author), at: 0)
+        }
         let reviews = Dictionary(try decode([ReviewRead].self, try await reviewsData).map { ($0.entryId, $0.body) }, uniquingKeysWith: { a, _ in a })
         let notes = Dictionary(try decode([PrivateNoteRead].self, try await notesData).map { ($0.entryId, $0.notes) }, uniquingKeysWith: { a, _ in a })
         let stats = Dictionary(try decode([EntryStatsRow].self, try await statsData).map { ($0.entryId, $0) }, uniquingKeysWith: { a, _ in a })
@@ -399,7 +412,12 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
                 consumedOn: row.consumedOn, location: row.location, occasion: row.occasion,
                 taggedUserIDs: row.taggedUserIds, drinkAgain: row.drinkAgain, isFavorite: row.isFavorite,
                 visibility: row.visibility, createdAt: row.createdAt, likeCount: s?.likeCount ?? 0,
-                commentCount: s?.commentCount ?? 0, likedByMe: s?.likedByMe ?? false)
+                commentCount: s?.commentCount ?? 0, likedByMe: s?.likedByMe ?? false,
+                social: EntrySocial(
+                    reactions: Dictionary(uniqueKeysWithValues: (s?.reactions ?? [:]).compactMap { k, v in ReactionKind(rawValue: k).map { ($0, v) } }),
+                    mine: Set((s?.myReactions ?? []).compactMap(ReactionKind.init(rawValue:))),
+                    shareCount: s?.shareCount ?? 0,
+                    preview: previews[row.id] ?? []))
             return ReviewItem(entry: entry, author: author, wine: wine)
         }
     }
@@ -661,14 +679,34 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         }
     }
 
+    private static let commentColumns = "id,entry_id,user_id,body,created_at,parent_id,mentioned_user_ids"
+
+    private static func comment(_ r: CommentRow, author: Profile) -> ReviewComment {
+        ReviewComment(id: r.id, entryID: r.entryId, author: author, body: r.body, createdAt: r.createdAt,
+                      parentID: r.parentId, mentionedUserIDs: r.mentionedUserIds ?? [])
+    }
+
+    private struct CommentLikeRead: Decodable { var commentId: UUID; var userId: UUID }
+
     func comments(entryID: UUID) async throws -> [ReviewComment] {
-        try await run {
-            let data = try await client.from("review_comments").select()
+        let viewer = try? await me()
+        return try await run {
+            let data = try await client.from("review_comments").select(Self.commentColumns)
                 .eq("entry_id", value: entryID.uuidString).order("created_at", ascending: true).execute().data
             let rows = try decode([CommentRow].self, data)
-            let people = try await profiles(ids: rows.map(\.userId))
+            guard !rows.isEmpty else { return [] }
+            async let people = profiles(ids: rows.map(\.userId))
+            async let likeData = client.from("comment_likes").select("comment_id,user_id")
+                .in("comment_id", values: rows.map(\.id.uuidString)).execute().data
+            let likes = (try? decode([CommentLikeRead].self, try await likeData)) ?? []
+            let authors = try await people
             return rows.compactMap { r in
-                people[r.userId].map { ReviewComment(id: r.id, entryID: r.entryId, author: $0, body: r.body, createdAt: r.createdAt) }
+                guard let author = authors[r.userId] else { return nil }
+                var c = Self.comment(r, author: author)
+                let mine = likes.filter { $0.commentId == r.id }
+                c.likeCount = mine.count
+                c.likedByMe = mine.contains { $0.userId == viewer }
+                return c
             }
         }
     }
@@ -677,19 +715,92 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         var entry_id: UUID
         var user_id: UUID
         var body: String
+        var parent_id: UUID? = nil
+        var mentioned_user_ids: [UUID] = []
     }
 
     func addComment(_ body: String, entryID: UUID) async throws -> ReviewComment {
+        try await addComment(body, entryID: entryID, replyTo: nil, mentions: [])
+    }
+
+    func addComment(_ body: String, entryID: UUID, replyTo: UUID?, mentions: [UUID]) async throws -> ReviewComment {
         let viewer = try await me()
         let text = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, text.count <= 1000 else { throw AppError.validation("Comments must be 1–1000 characters.") }
         return try await run {
-            let data = try await client.from("review_comments").insert(CommentInsert(entry_id: entryID, user_id: viewer, body: text))
-                .select().single().execute().data
+            let insert = CommentInsert(entry_id: entryID, user_id: viewer, body: text, parent_id: replyTo,
+                                       mentioned_user_ids: Array(Set(mentions).subtracting([viewer]).prefix(10)))
+            let data = try await client.from("review_comments").insert(insert)
+                .select(Self.commentColumns).single().execute().data
             let row = try decode(CommentRow.self, data)
-            let author = try await loadProfile(viewer)
-            return ReviewComment(id: row.id, entryID: row.entryId, author: author, body: row.body, createdAt: row.createdAt)
+            let cached = try await profiles(ids: [viewer])[viewer]
+            let author = if let cached { cached } else { try await loadProfile(viewer) }
+            return Self.comment(row, author: author)
         }
+    }
+
+    func deleteComment(id: UUID) async throws {
+        try await run { try await client.from("review_comments").delete().eq("id", value: id.uuidString).execute() }
+    }
+
+    private struct CommentLikeRow: Encodable { var comment_id: UUID; var user_id: UUID }
+
+    func setCommentLike(_ liked: Bool, commentID: UUID) async throws {
+        let viewer = try await me()
+        try await run {
+            if liked {
+                try await client.from("comment_likes").upsert(CommentLikeRow(comment_id: commentID, user_id: viewer),
+                                                             onConflict: "comment_id,user_id", ignoreDuplicates: true).execute()
+            } else {
+                try await client.from("comment_likes").delete()
+                    .eq("comment_id", value: commentID.uuidString).eq("user_id", value: viewer.uuidString).execute()
+            }
+        }
+    }
+
+    private struct ReactionRow: Codable { var entry_id: UUID; var user_id: UUID; var kind: String }
+
+    func setReaction(_ kind: ReactionKind, on: Bool, entryID: UUID) async throws {
+        let viewer = try await me()
+        try await run {
+            if on {
+                try await client.from("entry_reactions").upsert(ReactionRow(entry_id: entryID, user_id: viewer, kind: kind.rawValue),
+                                                               onConflict: "entry_id,user_id,kind", ignoreDuplicates: true).execute()
+            } else {
+                try await client.from("entry_reactions").delete().eq("entry_id", value: entryID.uuidString)
+                    .eq("user_id", value: viewer.uuidString).eq("kind", value: kind.rawValue).execute()
+            }
+        }
+    }
+
+    private struct LikerRead: Decodable { var userId: UUID }
+    private struct ReactorRead: Decodable { var userId: UUID; var kind: String }
+
+    func reactors(entryID: UUID) async throws -> [Reactor] {
+        try await run {
+            async let likeData = client.from("review_likes").select("user_id").eq("entry_id", value: entryID.uuidString).execute().data
+            async let reactionData = client.from("entry_reactions").select("user_id,kind").eq("entry_id", value: entryID.uuidString)
+                .order("created_at", ascending: false).execute().data
+            let likers = try decode([LikerRead].self, try await likeData).map(\.userId)
+            let reactions = try decode([ReactorRead].self, try await reactionData)
+            let people = try await profiles(ids: likers + reactions.map(\.userId))
+            var order: [UUID] = []
+            for id in reactions.map(\.userId) + likers where !order.contains(id) { order.append(id) }
+            return order.compactMap { id in
+                people[id].map { profile in
+                    Reactor(profile: profile, liked: likers.contains(id),
+                            reactions: reactions.filter { $0.userId == id }.compactMap { ReactionKind(rawValue: $0.kind) })
+                }
+            }
+        }
+    }
+
+    private struct ShareRow: Encodable { var entry_id: UUID; var user_id: UUID }
+
+    func recordShare(entryID: UUID) async {
+        guard let viewer = try? await me() else { return }
+        _ = try? await run { try await client.from("entry_shares").insert(ShareRow(entry_id: entryID, user_id: viewer)).execute() }
+        Telemetry.track("review_shared")
     }
 
     func notifications() async throws -> [AppNotification] {
@@ -705,6 +816,9 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
                 case "comment": .comment
                 case "tag": .tag
                 case "invite_joined": .inviteJoined
+                case "mention": .mention
+                case "reply": .reply
+                case "reaction": .reaction
                 default: .follow
                 }
                 return AppNotification(id: r.id, kind: kind, actor: actor, entryID: r.entryId, wineName: nil,

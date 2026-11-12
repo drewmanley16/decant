@@ -76,6 +76,8 @@ struct TastingEntry: Codable, Hashable, Sendable, Identifiable {
     var likeCount: Int
     var commentCount: Int
     var likedByMe: Bool
+    /// Reactions, shares and a comment preview. Optional so older saved data still decodes.
+    var social: EntrySocial? = nil
 
     static func normalizedRating(_ value: Double) -> Double {
         min(5, max(0.5, (value * 2).rounded() / 2))
@@ -128,10 +130,66 @@ struct ReviewComment: Codable, Hashable, Sendable, Identifiable {
     var author: Profile
     var body: String
     var createdAt: Date
+    /// The comment this one replies to (replies are one level deep).
+    var parentID: UUID? = nil
+    var mentionedUserIDs: [UUID] = []
+    var likeCount: Int = 0
+    var likedByMe: Bool = false
+}
+
+/// Wine-flavoured reactions, alongside the plain heart.
+enum ReactionKind: String, CaseIterable, Codable, Sendable, Identifiable {
+    case cheers, want, wow
+
+    var id: String { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .cheers: "🥂"
+        case .want: "😋"
+        case .wow: "🤩"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .cheers: "Cheers"
+        case .want: "Want to try"
+        case .wow: "Wow"
+        }
+    }
+}
+
+struct EntrySocial: Codable, Hashable, Sendable {
+    var reactions: [ReactionKind: Int] = [:]
+    var mine: Set<ReactionKind> = []
+    var shareCount = 0
+    /// The newest couple of comments, shown under a review in the feed.
+    var preview: [ReviewComment] = []
+
+    var totalReactions: Int { reactions.values.reduce(0, +) }
+
+    mutating func toggle(_ kind: ReactionKind) {
+        if mine.contains(kind) {
+            mine.remove(kind)
+            reactions[kind] = max(0, (reactions[kind] ?? 1) - 1)
+        } else {
+            mine.insert(kind)
+            reactions[kind, default: 0] += 1
+        }
+    }
+}
+
+/// Someone who liked or reacted to a review.
+struct Reactor: Hashable, Sendable, Identifiable {
+    var profile: Profile
+    var liked: Bool
+    var reactions: [ReactionKind]
+    var id: UUID { profile.id }
 }
 
 enum NotificationKind: String, Codable, Sendable {
-    case follow, like, comment, tag, inviteJoined
+    case follow, like, comment, tag, inviteJoined, mention, reply, reaction
 }
 
 struct AppNotification: Hashable, Sendable, Identifiable {
@@ -150,6 +208,9 @@ struct AppNotification: Hashable, Sendable, Identifiable {
         case .comment: "commented on your review\(wineName.map { " of \($0)" } ?? "")"
         case .tag: "tagged you in a tasting\(wineName.map { " of \($0)" } ?? "")"
         case .inviteJoined: "joined Decant with your invite"
+        case .mention: "mentioned you in a comment\(wineName.map { " on \($0)" } ?? "")"
+        case .reply: "replied to your comment\(wineName.map { " on \($0)" } ?? "")"
+        case .reaction: "reacted to your review\(wineName.map { " of \($0)" } ?? "")"
         }
     }
 }

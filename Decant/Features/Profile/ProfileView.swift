@@ -265,7 +265,7 @@ private struct ProfileContent: View {
         NavigationLink(value: Route.stats) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(isMe ? "Your wine year" : "Statistics").font(Typo.title3)
+                    Text(isMe ? "Your taste & year in wine" : "Statistics").font(Typo.title3)
                     Spacer()
                     if isMe { Image(systemName: "chevron.right").foregroundStyle(Palette.secondaryText) }
                 }

@@ -54,6 +54,9 @@ function message(kind: string, wine: string | null): string {
     case "comment": return `commented on your tasting${of}`;
     case "tag": return `tagged you in a tasting${of}`;
     case "invite_joined": return "joined Decant with your invite 🎉";
+    case "mention": return wine ? `mentioned you in a comment on ${wine}` : "mentioned you in a comment";
+    case "reply": return wine ? `replied to your comment on ${wine}` : "replied to your comment";
+    case "reaction": return `reacted to your tasting${of} 🥂`;
     default: return "sent you a notification";
   }
 }

@@ -110,3 +110,110 @@ enum StatsCalculator {
         ]
     }
 }
+
+// MARK: - Taste profile & year in review
+
+/// A few plain-language observations about how someone drinks.
+struct TasteTrait: Sendable, Hashable, Identifiable {
+    var symbol: String
+    var title: String
+    var detail: String
+    var id: String { title }
+}
+
+/// One calendar year of tastings, for the shareable Year in Review.
+struct YearReview: Sendable, Equatable {
+    var year: Int
+    var tastings = 0
+    var uniqueWines = 0
+    var fiveStars = 0
+    var countries = 0
+    var topWine: Wine?
+    var topWineCount = 0
+    var bestRated: (wine: Wine, rating: Double)?
+    var topGrape: String?
+    var topCountry: String?
+    var topStyle: String?
+    var topOccasion: String?
+    var busiestMonth: Date?
+    var friendsTagged = 0
+
+    static func == (a: YearReview, b: YearReview) -> Bool {
+        a.year == b.year && a.tastings == b.tastings && a.topWine?.id == b.topWine?.id && a.bestRated?.wine.id == b.bestRated?.wine.id
+    }
+}
+
+extension StatsCalculator {
+    static func tasteTraits(_ items: [ReviewItem]) -> [TasteTrait] {
+        guard items.count >= 3 else { return [] }
+        var traits: [TasteTrait] = []
+        let stats = compute(items)
+
+        if let style = stats.types.first {
+            let share = Double(style.value) / Double(max(1, items.count))
+            traits.append(TasteTrait(symbol: "wineglass.fill", title: share >= 0.6 ? "\(style.label) devotee" : "Leans \(style.label.lowercased())",
+                                     detail: "\(Int((share * 100).rounded()))% of your tastings are \(style.label.lowercased())."))
+        }
+
+        // The style you rate highest, when you've rated it at least twice.
+        let byType = Dictionary(grouping: items.filter { $0.entry.rating != nil }, by: \.wine.type)
+            .filter { $0.value.count >= 2 }
+            .mapValues { group in group.compactMap(\.entry.rating).reduce(0, +) / Double(group.count) }
+        if byType.count >= 2, let best = byType.max(by: { $0.value < $1.value }) {
+            traits.append(TasteTrait(symbol: "star.fill", title: "Happiest with \(best.key.displayName.lowercased())",
+                                     detail: "You rate it \(best.value.formatted(.number.precision(.fractionLength(1))))★ on average."))
+        }
+
+        if let grape = stats.grapes.first, grape.value >= 2 {
+            traits.append(TasteTrait(symbol: "leaf.fill", title: "Go-to grape: \(grape.label)", detail: "In \(grape.value) of the wines you’ve tried."))
+        }
+        if let country = stats.countries.first {
+            let others = stats.countries.count - 1
+            traits.append(TasteTrait(symbol: "globe.europe.africa.fill", title: "Home base: \(country.label)",
+                                     detail: others > 0 ? "Plus \(others) other countr\(others == 1 ? "y" : "ies") explored." : "Time to explore another country?"))
+        }
+        if let average = stats.averageRating {
+            let (title, detail) = switch average {
+            case 4.3...: ("Generous rater", "Your average is \(average.formatted(.number.precision(.fractionLength(1))))★. You know how to pick them.")
+            case ..<3.2: ("Tough critic", "Your average is \(average.formatted(.number.precision(.fractionLength(1))))★. A five from you means something.")
+            default: ("Balanced palate", "Your average is \(average.formatted(.number.precision(.fractionLength(1))))★.")
+            }
+            traits.append(TasteTrait(symbol: "scalemass.fill", title: title, detail: detail))
+        }
+        let answered = items.compactMap(\.entry.drinkAgain)
+        if answered.count >= 3 {
+            let yes = answered.filter { $0 }.count
+            traits.append(TasteTrait(symbol: "arrow.triangle.2.circlepath", title: "Would drink again: \(Int((Double(yes) / Double(answered.count) * 100).rounded()))%",
+                                     detail: "Of the \(answered.count) wines you gave a verdict on."))
+        }
+        return traits
+    }
+
+    static func yearReview(_ items: [ReviewItem], year: Int, calendar: Calendar = .current) -> YearReview {
+        let yearItems = items.filter { calendar.component(.year, from: $0.entry.consumedOn) == year }
+        var review = YearReview(year: year)
+        review.tastings = yearItems.count
+        guard !yearItems.isEmpty else { return review }
+        let stats = compute(yearItems)
+        review.uniqueWines = stats.uniqueWines
+        review.countries = stats.countries.count
+        review.fiveStars = yearItems.filter { ($0.entry.rating ?? 0) >= 5 }.count
+        review.topGrape = stats.grapes.first?.label
+        review.topCountry = stats.countries.first?.label
+        review.topStyle = stats.types.first?.label
+        if let best = stats.topRated.first { review.bestRated = (best.wine, best.rating) }
+
+        let byWine = Dictionary(grouping: yearItems, by: \.wine.id)
+        if let most = byWine.max(by: { $0.value.count < $1.value.count }), let wine = most.value.first?.wine {
+            review.topWine = wine
+            review.topWineCount = most.value.count
+        }
+        let occasions = yearItems.compactMap { $0.entry.occasion?.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        review.topOccasion = Dictionary(grouping: occasions, by: { $0.lowercased() })
+            .max { $0.value.count < $1.value.count }.flatMap { $0.value.count >= 2 ? $0.value.first : nil }
+        let months = Dictionary(grouping: yearItems) { calendar.dateInterval(of: .month, for: $0.entry.consumedOn)?.start ?? $0.entry.consumedOn }
+        review.busiestMonth = months.max { $0.value.count < $1.value.count }?.key
+        review.friendsTagged = Set(yearItems.flatMap(\.entry.taggedUserIDs)).count
+        return review
+    }
+}

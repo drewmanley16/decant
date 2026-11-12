@@ -12,6 +12,7 @@
 		0FB93C73B3A9A49EA0D06A10 /* Wine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653DCB80E0B984B30FC15FD1 /* Wine.swift */; };
 		111F2210A0809736EBBDF458 /* CellarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536FB8CFEAE91E044CBFCBEA /* CellarViewModel.swift */; };
 		1309B938B2EBEF352C498C68 /* ScanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFCFDC5DC344CEF182FCA1A2 /* ScanViewModel.swift */; };
+		152D278441E3E6A085031F36 /* YearInReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939D80E7BB8D9FA32F383027 /* YearInReviewView.swift */; };
 		169B31B2BBBE46A71FA26F1D /* LiveLabelScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA48D100B34D8FD4C87ACEE /* LiveLabelScanner.swift */; };
 		197D57B4D70DD6D6E3478D35 /* LogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A91FC0C99730C95C6290A5 /* LogicTests.swift */; };
 		1A8D338C9B0234F28D33CDB4 /* IdentificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0301ED5877DD95536F1A97C8 /* IdentificationTests.swift */; };
@@ -125,6 +126,7 @@
 		7AEA0536A85C16E6F5C90669 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		8C293C7C0C6A8FC34F458BE7 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
 		9061AB10EB9305BE09CE65D5 /* SupabaseDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDecodingTests.swift; sourceTree = "<group>"; };
+		939D80E7BB8D9FA32F383027 /* YearInReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearInReviewView.swift; sourceTree = "<group>"; };
 		96D3BAF20C6F7BED737FB96D /* SafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyTests.swift; sourceTree = "<group>"; };
 		9A33E96DA79AD0C047633C7B /* RateWineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateWineView.swift; sourceTree = "<group>"; };
 		9D373683D092A38EF86A4542 /* Decant.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Decant.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -385,6 +387,7 @@
 				32D288061BB9E756AF4D689F /* ProfileView.swift */,
 				4CEEF96219EB765BFD06DD6C /* SettingsView.swift */,
 				66FAA237CE80BA40D1A4ADE8 /* StatsView.swift */,
+				939D80E7BB8D9FA32F383027 /* YearInReviewView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -644,6 +647,7 @@
 				8CCB4EC8C17331985F8F8D47 /* WineIdentificationService.swift in Sources */,
 				D57D60671A4F0FC664E91730 /* WineLexicon.swift in Sources */,
 				9EC7365A4DEEA6797E9B83F0 /* WineMatcher.swift in Sources */,
+				152D278441E3E6A085031F36 /* YearInReviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

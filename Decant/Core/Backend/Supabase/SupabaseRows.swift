@@ -231,6 +231,9 @@ struct EntryStatsRow: Decodable {
     var likeCount: Int
     var commentCount: Int
     var likedByMe: Bool
+    var reactions: [String: Int]?
+    var myReactions: [String]?
+    var shareCount: Int?
 }
 
 struct CommentRow: Decodable {
@@ -239,6 +242,8 @@ struct CommentRow: Decodable {
     var userId: UUID
     var body: String
     var createdAt: Date
+    var parentId: UUID?
+    var mentionedUserIds: [UUID]?
 }
 
 struct ActivityRow: Decodable {

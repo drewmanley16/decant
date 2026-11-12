@@ -4,6 +4,8 @@ import SwiftUI
 struct StatsView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var stats: WineStats?
+    @State private var items: [ReviewItem] = []
+    @State private var traits: [TasteTrait] = []
     @State private var selectedMonth: Date?
 
     var body: some View {
@@ -20,15 +22,51 @@ struct StatsView: View {
             }
         }
         .screenBackground()
-        .navigationTitle("Statistics")
+        .navigationTitle("Your taste")
         .task {
             guard let me = env.currentUser else { return }
-            stats = StatsCalculator.compute((try? await env.tastings.entries(forUser: me.id)) ?? [])
+            items = (try? await env.tastings.entries(forUser: me.id)) ?? []
+            traits = StatsCalculator.tasteTraits(items)
+            stats = StatsCalculator.compute(items)
         }
     }
 
     private func content(_ s: WineStats) -> some View {
         VStack(spacing: 18) {
+            NavigationLink {
+                YearInReviewView(items: items)
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "sparkles").font(.title2).foregroundStyle(Palette.gold)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your \(String(Calendar.current.component(.year, from: .now))) in wine")
+                            .font(.system(.headline, design: .serif)).foregroundStyle(.white)
+                        Text("Your year’s highlights, ready to share").font(.caption).foregroundStyle(.white.opacity(0.75))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.7))
+                }
+                .padding(18)
+                .background(LinearGradient(colors: [Palette.burgundy, Palette.burgundyDeep], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if !traits.isEmpty {
+                card("Your taste") {
+                    ForEach(traits) { trait in
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: trait.symbol).foregroundStyle(Palette.burgundy).frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(trait.title).font(.subheadline.weight(.semibold))
+                                Text(trait.detail).font(.caption).foregroundStyle(Palette.secondaryText)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+            }
+
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 tile("\(s.totalTastings)", "Tastings", "book.closed")
                 tile("\(s.uniqueWines)", "Unique wines", "wineglass")

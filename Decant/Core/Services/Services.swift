@@ -79,6 +79,12 @@ protocol SocialService: Sendable {
     func setLike(_ liked: Bool, entryID: UUID) async throws
     func comments(entryID: UUID) async throws -> [ReviewComment]
     func addComment(_ body: String, entryID: UUID) async throws -> ReviewComment
+    func addComment(_ body: String, entryID: UUID, replyTo: UUID?, mentions: [UUID]) async throws -> ReviewComment
+    func deleteComment(id: UUID) async throws
+    func setCommentLike(_ liked: Bool, commentID: UUID) async throws
+    func setReaction(_ kind: ReactionKind, on: Bool, entryID: UUID) async throws
+    func reactors(entryID: UUID) async throws -> [Reactor]
+    func recordShare(entryID: UUID) async
     func notifications() async throws -> [AppNotification]
     func markNotificationsRead() async throws
     func registerDevice(token: String, sandbox: Bool) async throws
@@ -132,4 +138,17 @@ struct RemoteLabelReading: Sendable {
     var candidateWineIDs: [(id: UUID, score: Double)]
     var suggestion: AITastingSuggestion?
     var identityConfidence: Double
+}
+
+
+/// Defaults so backends without the newer social features (Local Mode) still compile and behave sensibly.
+extension SocialService {
+    func addComment(_ body: String, entryID: UUID, replyTo: UUID?, mentions: [UUID]) async throws -> ReviewComment {
+        try await addComment(body, entryID: entryID)
+    }
+    func deleteComment(id: UUID) async throws { throw AppError.unavailable("Not available in Local Mode.") }
+    func setCommentLike(_ liked: Bool, commentID: UUID) async throws {}
+    func setReaction(_ kind: ReactionKind, on: Bool, entryID: UUID) async throws {}
+    func reactors(entryID: UUID) async throws -> [Reactor] { [] }
+    func recordShare(entryID: UUID) async {}
 }
