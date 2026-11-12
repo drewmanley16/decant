@@ -198,87 +198,63 @@ struct AISuggestionCard: View {
     }
 }
 
-/// Manual wine entry / correction, with catalog suggestions so users can
-/// pick an existing wine instead of creating a duplicate.
+/// Add a wine that isn't in the catalog, one question per screen:
+/// name & producer → year & style → origin → bottle. Only the first screen is required,
+/// and catalog matches show up as you type so people pick an existing wine instead of a duplicate.
 struct ManualEntryView: View {
+    enum Step: Int, CaseIterable { case name, style, origin, bottle }
+
     var prefill: WineDraft?
     var onSave: (WineDraft) async -> Void
     @Environment(AppEnvironment.self) private var env
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var step: Step = .name
     @State private var draft = WineDraft()
     @State private var grapesText = ""
     @State private var suggestions: [Wine] = []
     @State private var saving = false
     @State private var didPrefill = false
+    @FocusState private var focus: Field?
+
+    private enum Field { case name, producer }
+    private static let sizes = [187, 375, 500, 750, 1000, 1500, 3000]
+    private static let thisYear = Calendar.current.component(.year, from: .now)
 
     var body: some View {
-        Form {
-            if !suggestions.isEmpty {
-                Section("Already in the catalog?") {
-                    ForEach(suggestions.prefix(4)) { wine in
-                        NavigationLink(value: Route.wine(wine)) { WineRow(wine: wine) }
+        VStack(spacing: 0) {
+            progressBar
+            TabView(selection: $step) {
+                ForEach(Step.allCases, id: \.self) { page in
+                    FitScroll {
+                        content(for: page)
+                            .padding(.horizontal, Metrics.gutter)
+                            .padding(.vertical, 16)
                     }
+                    .tag(page)
                 }
             }
-            Section("Wine") {
-                TextField("Wine name", text: $draft.name).textInputAutocapitalization(.words)
-                TextField("Producer / winery", text: $draft.producer).textInputAutocapitalization(.words)
-                Picker("Vintage", selection: $draft.vintage) {
-                    Text("Non-vintage").tag(Int?.none)
-                    ForEach((1950...Calendar.current.component(.year, from: .now)).reversed(), id: \.self) {
-                        Text(String($0)).tag(Int?.some($0))
-                    }
-                }
-                Picker("Style", selection: $draft.type) {
-                    ForEach(WineType.allCases) { Text($0.displayName).tag($0) }
-                }
-                TextField("Grapes (comma separated)", text: $grapesText)
-            }
-            Section("Origin") {
-                TextField("Country", text: $draft.country)
-                TextField("Region", text: $draft.region)
-                TextField("Appellation", text: $draft.appellation)
-            }
-            Section("Bottle") {
-                HStack {
-                    Text("ABV %")
-                    Spacer()
-                    TextField("Optional", value: $draft.abv, format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                }
-                Picker("Size", selection: $draft.bottleSizeML) {
-                    ForEach([187, 375, 500, 750, 1000, 1500, 3000], id: \.self) { Text("\($0) ml").tag($0) }
-                }
-                HStack {
-                    Text("Price")
-                    Spacer()
-                    TextField("Optional", value: $draft.priceAmount, format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                }
-            }
-            if draft.source == .label {
-                Section {
-                    Label("Fields were pre-filled from your label. Please check them.", systemImage: "text.viewfinder")
-                        .font(.footnote).foregroundStyle(Palette.secondaryText)
-                }
-            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            footer
         }
-        .brandedForm()
+        .background(Palette.cream.ignoresSafeArea())
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: step)
+        .sensoryFeedback(.impact(weight: .light), trigger: step)
+        .onChange(of: step) { focus = nil }
         .navigationTitle("Add a wine")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    saving = true
-                    var final = draft
-                    final.grapes = grapesText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-                    Task { await onSave(final); saving = false }
-                }
-                .disabled(!draft.isValid || saving)
+                Button("Save", action: save).fontWeight(.semibold).disabled(!draft.isValid || saving)
             }
         }
         .onAppear {
-            guard !didPrefill, let prefill else { return }
+            guard !didPrefill else { return }
             didPrefill = true
-            draft = prefill
-            grapesText = prefill.grapes.joined(separator: ", ")
+            if let prefill {
+                draft = prefill
+                grapesText = prefill.grapes.joined(separator: ", ")
+            }
+            if draft.name.isEmpty { focus = .name }
         }
         .task(id: draft.name + draft.producer) {
             let text = [draft.producer, draft.name].joined(separator: " ").trimmingCharacters(in: .whitespaces)
@@ -286,6 +262,208 @@ struct ManualEntryView: View {
             try? await Task.sleep(for: .milliseconds(300))
             suggestions = (try? await env.catalog.search(WineSearchQuery(text: draft.name.isEmpty ? draft.producer : draft.name), limit: 6)) ?? []
         }
+    }
+
+    // MARK: Chrome
+
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.burgundy.opacity(0.12))
+                Capsule().fill(Palette.burgundy)
+                    .frame(width: max(8, geo.size.width * CGFloat(step.rawValue + 1) / CGFloat(Step.allCases.count)))
+            }
+        }
+        .frame(height: 4)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .accessibilityElement()
+        .accessibilityLabel("Step \(step.rawValue + 1) of \(Step.allCases.count)")
+    }
+
+    private var footer: some View {
+        VStack(spacing: 8) {
+            if step == .bottle || !draft.isValid && step != .name {
+                Button(action: save) {
+                    ZStack {
+                        Text("Add wine").opacity(saving ? 0 : 1)
+                        if saving { ProgressView().tint(.white) }
+                    }
+                }
+                .buttonStyle(.primary)
+                .disabled(!draft.isValid || saving)
+                .opacity(draft.isValid ? 1 : 0.5)
+                if !draft.isValid {
+                    Button("Add a name and producer first") { step = .name }
+                        .font(.footnote.weight(.semibold))
+                }
+            } else {
+                Button("Next") { if let next = Step(rawValue: step.rawValue + 1) { step = next } }
+                    .buttonStyle(.primary)
+                    .disabled(step == .name && !draft.isValid)
+                    .opacity(step == .name && !draft.isValid ? 0.5 : 1)
+            }
+        }
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: Pages
+
+    @ViewBuilder
+    private func content(for page: Step) -> some View {
+        switch page {
+        case .name: namePage
+        case .style: stylePage
+        case .origin: originPage
+        case .bottle: bottlePage
+        }
+    }
+
+    private func title(_ eyebrow: String, _ text: String, _ hint: String? = nil) -> some View {
+        VStack(spacing: 6) {
+            Text(eyebrow).eyebrow()
+            Text(text)
+                .font(.system(.title, design: .serif).weight(.semibold))
+                .foregroundStyle(Palette.charcoal)
+            if let hint {
+                Text(hint).font(.subheadline).foregroundStyle(Palette.secondaryText)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func field(_ placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .textInputAutocapitalization(.words)
+            .padding(14)
+            .background(Palette.creamElevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+    }
+
+    private var namePage: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            title("The wine", "What are you drinking?")
+            if draft.source == .label {
+                Label("Filled in from your label. Give it a quick check.", systemImage: "text.viewfinder")
+                    .font(.footnote).foregroundStyle(Palette.secondaryText)
+                    .frame(maxWidth: .infinity)
+            }
+            field("Wine name", text: $draft.name)
+                .focused($focus, equals: .name)
+                .submitLabel(.next)
+                .onSubmit { focus = .producer }
+            field("Producer / winery", text: $draft.producer)
+                .focused($focus, equals: .producer)
+                .submitLabel(.next)
+                .onSubmit { if draft.isValid { step = .style } }
+            if !suggestions.isEmpty {
+                Text("Already in Decant?").font(.headline).foregroundStyle(Palette.charcoal).padding(.top, 8)
+                VStack(spacing: 0) {
+                    ForEach(suggestions.prefix(4)) { wine in
+                        NavigationLink(value: Route.wine(wine)) {
+                            HStack {
+                                WineRow(wine: wine)
+                                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondaryText)
+                            }
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                        }
+                        .buttonStyle(.plain)
+                        if wine.id != suggestions.prefix(4).last?.id { Divider().padding(.leading, 14) }
+                    }
+                }
+                .background(Palette.creamElevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+            }
+        }
+    }
+
+    private var stylePage: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            title("Style", "Year & style")
+            Text("Style").font(.headline).foregroundStyle(Palette.charcoal)
+            FlowLayout(spacing: 8) {
+                ForEach(WineType.allCases) { type in
+                    Button { draft.type = type } label: {
+                        HStack(spacing: 6) {
+                            Circle().fill(Palette.wineColor(type)).frame(width: 12, height: 12)
+                                .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
+                            Text(type.displayName).font(.subheadline.weight(.medium))
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 9)
+                        .foregroundStyle(draft.type == type ? .white : Palette.charcoal)
+                        .background(draft.type == type ? Palette.burgundy : Palette.creamElevated, in: Capsule())
+                        .overlay(Capsule().strokeBorder(draft.type == type ? .clear : Palette.hairline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(draft.type == type ? .isSelected : [])
+                }
+            }
+            .sensoryFeedback(.selection, trigger: draft.type)
+            Text("Vintage").font(.headline).foregroundStyle(Palette.charcoal).padding(.top, 6)
+            Picker("Vintage", selection: $draft.vintage) {
+                Text("Non-vintage").tag(Int?.none)
+                ForEach((1950...Self.thisYear).reversed(), id: \.self) {
+                    Text(String($0)).tag(Int?.some($0))
+                }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxHeight: 150)
+            .background(Palette.creamElevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private var originPage: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            title("Origin", "Where's it from?", "All optional. Skip what you don't know.")
+            field("Country", text: $draft.country)
+            field("Region", text: $draft.region)
+            field("Appellation", text: $draft.appellation)
+            field("Grapes (comma separated)", text: $grapesText)
+        }
+    }
+
+    private var bottlePage: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            title("Bottle", "The bottle", "Optional too.")
+            Text("Size").font(.headline).foregroundStyle(Palette.charcoal)
+            FlowLayout(spacing: 8) {
+                ForEach(Self.sizes, id: \.self) { size in
+                    Button { draft.bottleSizeML = size } label: {
+                        Chip(title: size >= 1000 ? "\((Double(size) / 1000).formatted()) L" : "\(size) ml",
+                             isSelected: draft.bottleSizeML == size)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            HStack(spacing: 12) {
+                numberField("ABV %", value: $draft.abv)
+                numberField("Price", value: $draft.priceAmount)
+            }
+            .padding(.top, 6)
+        }
+    }
+
+    private func numberField(_ label: String, value: Binding<Double?>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.headline).foregroundStyle(Palette.charcoal)
+            TextField("Optional", value: value, format: .number)
+                .keyboardType(.decimalPad)
+                .padding(14)
+                .background(Palette.creamElevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+        }
+    }
+
+    private func save() {
+        guard draft.isValid, !saving else { return }
+        saving = true
+        focus = nil
+        var final = draft
+        final.grapes = grapesText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        Task { await onSave(final); saving = false }
     }
 }
 
