@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decant</title>
+<meta name="description" content="Decant is a wine diary for you and your friends. Scan a label, rate it, keep your cellar.">
+<meta property="og:title" content="Decant">
+<meta property="og:description" content="A wine diary for you and your friends. Invite-only for now.">
+<meta property="og:image" content="https://www.getdecant.xyz/img/cellar.jpg">
+<meta name="theme-color" content="#120709">
+<meta name="apple-itunes-app" content="app-id=6827748559">
+<link rel="icon" href="/img/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+  body { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+         background: radial-gradient(120% 80% at 50% 0%, #5B1424 0%, var(--deep) 55%, #1A0509 100%); }
+  .card { width: 100%; max-width: 400px; background: var(--cream); color: #241A17; border-radius: 28px;
+          padding: 32px 28px 26px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+  .card .icon { width: 64px; height: 64px; border-radius: 15px; margin: 0 auto 14px; box-shadow: 0 8px 20px #0003; }
+  .mark { letter-spacing: .5em; color: var(--gold); font-weight: 600; font-size: 12px; margin-bottom: 16px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
+  p { color: #7C6E66; line-height: 1.5; margin: 0 0 22px; }
+  .code { font: 600 28px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; padding: 16px 0 16px .3em;
+          border: 1.5px dashed var(--gold); border-radius: 16px; margin: 0 0 22px; background: #fff8; }
+  .card .btn { display: flex; width: 100%; margin-bottom: 12px; }
+  .ghost-btn { background: transparent; color: var(--burgundy); box-shadow: inset 0 0 0 1.5px var(--burgundy); }
+  .ghost { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; display: inline-block; padding: 6px 0; }
+  .small { font-size: 13px; margin: 14px 0 0; }
+  .small a { color: #7C6E66; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main class="card">
+  <img class="icon" src="/img/icon.png" alt="">
+  <div class="mark">DECANT</div>
+  <h1 id="title">Every great bottle, remembered.</h1>
+  <p id="body">A wine diary for you and your friends. Scan a label, rate it, and keep your cellar.</p>
+  <div id="code" class="code hidden"></div>
+  <button id="copy" class="btn ghost-btn hidden" type="button">Copy invite code</button>
+  <a id="store" class="btn btn-wine" href="https://apps.apple.com/us/app/decant-wine-scanner-cellar/id6827748559">Get Decant on the App Store</a>
+  <a id="open" class="ghost" href="decant://">Already have Decant? Open it</a>
+  <p class="small">Available for iPhone · <a href="/">About Decant</a></p>
+</main>
+<script>
+  // Universal links open the app directly when it's installed; this page is the fallback.
+  const [, kind, value] = location.pathname.split("/");
+  const safe = (value || "").replace(/[^A-Za-z0-9-]/g, "");
+  const copy = {
+    t: ["A tasting on Decant", "Someone shared a tasting with you. Open it in Decant to see the rating and review."],
+    u: ["A Decant profile", "See their diary, cellar highlights and favourite bottles in Decant."],
+    w: ["A wine on Decant", "See ratings and reviews for this wine in Decant."],
+    invite: ["You're invited to Decant", "Decant is invite-only. Get the app, then paste this code when you sign up. We'll copy it for you."],
+  }[kind];
+  if (copy && safe) {
+    document.getElementById("title").textContent = copy[0];
+    document.getElementById("body").textContent = copy[1];
+    document.getElementById("open").href = `decant://${kind}/${safe}`;
+    if (kind === "invite") {
+      const el = document.getElementById("code");
+      el.textContent = safe.toUpperCase();
+      el.classList.remove("hidden");
+      const copyBtn = document.getElementById("copy");
+      copyBtn.classList.remove("hidden");
+      copyBtn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(safe.toUpperCase()); copyBtn.textContent = "Copied"; }
+        catch { const r = document.createRange(); r.selectNodeContents(el); getSelection().removeAllRanges(); getSelection().addRange(r); }
+      });
+      // Copy the code on the way to the App Store, so it's ready to paste after installing.
+      const store = document.getElementById("store");
+      store.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try { await navigator.clipboard.writeText(safe.toUpperCase()); } catch {}
+        location.href = store.href;
+      });
+    }
+  }
+</script>
+</body>
+</html>

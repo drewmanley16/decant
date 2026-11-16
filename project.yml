@@ -36,7 +36,7 @@ targets:
       path: Decant/Resources/Decant.entitlements
       properties:
         com.apple.developer.applesignin: [Default]
-        com.apple.developer.associated-domains: ["applinks:decant-diary.vercel.app"]
+        com.apple.developer.associated-domains: ["applinks:www.getdecant.xyz", "applinks:getdecant.xyz", "applinks:decant-diary.vercel.app"]
         aps-environment: development
     info:
       path: Decant/Resources/Info.plist

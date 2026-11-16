@@ -11,6 +11,10 @@ struct DeepLinkTests {
         #expect(DeepLink(url: URL(string: "decant://u/\(id.uuidString.lowercased())")!) == .user(id))
         #expect(DeepLink(url: URL(string: "decant://w/\(id.uuidString)")!) == .wine(id))
         #expect(DeepLink(url: URL(string: "https://decant-diary.vercel.app/invite/abc234")!) == .invite("ABC234"))
+        #expect(DeepLink(url: URL(string: "https://www.getdecant.xyz/invite/abc234")!) == .invite("ABC234"))
+        #expect(DeepLink(url: URL(string: "https://getdecant.xyz/t/\(id.uuidString)")!) == .entry(id))
+        #expect(DeepLink.invite("ABC234").url.absoluteString == "https://www.getdecant.xyz/invite/ABC234")
+        #expect(DeepLink(url: URL(string: "https://example.com/invite/abc234")!) == nil)
     }
 
     @Test func rejectsOtherHostsAndBadValues() {

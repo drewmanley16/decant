@@ -2,11 +2,11 @@ import SwiftUI
 
 /// Public pages required by the App Store (privacy policy, terms, support).
 enum LegalLinks {
-    static let base = URL(string: "https://drewmanley16.github.io/decant-legal")!
-    static let privacy = base.appendingPathComponent("privacy.html")
-    static let terms = base.appendingPathComponent("terms.html")
-    static let guidelines = URL(string: "https://drewmanley16.github.io/decant-legal/terms.html#community-guidelines")!
-    static let support = base.appendingPathComponent("support.html")
+    static let base = URL(string: "https://www.getdecant.xyz")!
+    static let privacy = base.appendingPathComponent("privacy")
+    static let terms = base.appendingPathComponent("terms")
+    static let guidelines = URL(string: "https://www.getdecant.xyz/terms#community-guidelines")!
+    static let support = base.appendingPathComponent("support")
 }
 
 /// Pick a reason and file a report. The reported item disappears for the reporter right away.

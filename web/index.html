@@ -3,78 +3,152 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Decant</title>
-<meta name="description" content="Decant is a wine diary for you and your friends. Scan a label, rate it, keep your cellar.">
+<title>Decant · A wine diary for you and your friends</title>
+<meta name="description" content="Scan any wine label, rate it, and keep your cellar on real shelves. See what your friends are opening. Decant for iPhone.">
 <meta property="og:title" content="Decant">
-<meta property="og:description" content="A wine diary for you and your friends. Invite-only for now.">
-<meta name="theme-color" content="#4A0F1C">
+<meta property="og:description" content="A wine diary for you and your friends. Scan a label, rate it, keep your cellar.">
+<meta property="og:url" content="https://www.getdecant.xyz/">
+<meta property="og:image" content="https://www.getdecant.xyz/img/cellar.jpg">
+<meta name="theme-color" content="#120709">
 <meta name="apple-itunes-app" content="app-id=6827748559">
+<link rel="icon" href="/img/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
 <style>
-  :root { --cream: #F7F1EA; --burgundy: #7A1C2E; --deep: #3A0A15; --gold: #C9A46A; --ink: #241A17; --muted: #7C6E66; }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
-         background: radial-gradient(120% 80% at 50% 0%, #5B1424 0%, var(--deep) 55%, #1A0509 100%);
-         font-family: Inter, system-ui, sans-serif; color: var(--ink); }
-  .card { width: 100%; max-width: 400px; background: var(--cream); border-radius: 28px; padding: 36px 28px 28px;
-          text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
-  .mark { letter-spacing: .5em; color: var(--gold); font-weight: 600; font-size: 13px; margin-bottom: 18px; }
-  h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
-  p { color: var(--muted); line-height: 1.5; margin: 0 0 22px; }
-  .code { font: 600 28px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; padding: 16px 0 16px .3em;
-          border: 1.5px dashed var(--gold); border-radius: 16px; margin: 0 0 22px; background: #fff8; }
-  .btn { display: block; text-decoration: none; background: var(--burgundy); color: #fff; font-weight: 600;
-         padding: 16px; border-radius: 999px; margin-bottom: 12px; }
-  .ghost { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; display: inline-block; padding: 6px 0; }
-  .ghost-btn { width: 100%; border: 1.5px solid var(--burgundy); background: transparent; color: var(--burgundy); font: inherit; font-weight: 600; cursor: pointer; }
-  .hidden { display: none; }
+  .hero { position: relative; overflow: hidden;
+          background: radial-gradient(90% 70% at 70% 30%, #4A0F1C 0%, #250A10 45%, var(--night) 80%); }
+  .hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 160px;
+                 background: linear-gradient(transparent, var(--night)); pointer-events: none; }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; padding: 56px 0 96px; }
+  .hero h1 { font-size: clamp(44px, 7vw, 76px); line-height: 1.02; }
+  .hero h1 em { font-style: italic; color: var(--gold); font-weight: 500; }
+  .lede { color: #D9CFC6; font-size: 19px; max-width: 30em; margin: 22px 0 32px; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .note { color: var(--muted); font-size: 14px; margin-top: 18px; }
+  .hero-art { position: relative; display: flex; justify-content: center; }
+  .hero-art .phone { max-width: 320px; transform: rotate(3deg); }
+  .hero-art .phone.back { position: absolute; max-width: 270px; left: -6%; top: 13%; transform: rotate(-7deg); opacity: .55; filter: blur(.5px); }
+  .glow { position: absolute; width: 420px; height: 420px; border-radius: 50%; background: #7A1C2E; filter: blur(110px); opacity: .45; top: 10%; }
+
+  .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; padding: 72px 0; }
+  .feature + .feature { border-top: 1px solid var(--line); }
+  .feature .phone { margin: 0 auto; max-width: 290px; }
+  .feature.flip .art { order: 2; }
+  .feature h2 { font-size: clamp(32px, 4.5vw, 46px); line-height: 1.08; margin-bottom: 16px; }
+  .feature p { color: #D2C8BF; font-size: 18px; margin: 0; max-width: 28em; }
+  .points { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; color: var(--muted); font-size: 16px; }
+  .points li::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin: 0 12px 2px 0; }
+
+  .invite { text-align: center; padding: 96px 0 104px; }
+  .invite-card { max-width: 640px; margin: 0 auto; padding: 48px 28px; border-radius: 32px;
+                 background: radial-gradient(120% 120% at 50% 0%, #4A0F1C, #1C0B0F 70%); border: 1px solid var(--line); }
+  .invite h2 { font-size: clamp(32px, 5vw, 44px); line-height: 1.1; margin-bottom: 14px; }
+  .invite p { color: #D2C8BF; margin: 0 auto 28px; max-width: 30em; }
+
+  @media (max-width: 860px) {
+    .nav-links { display: none; }
+    .hero-grid { grid-template-columns: 1fr; padding: 24px 0 72px; gap: 56px; text-align: center; }
+    .lede { margin-left: auto; margin-right: auto; }
+    .ctas { justify-content: center; }
+    .hero-art .phone { max-width: 260px; }
+    .hero-art .phone.back { display: none; }
+    .feature, .feature.flip { grid-template-columns: 1fr; gap: 40px; padding: 56px 0; text-align: center; }
+    .feature.flip .art { order: 0; }
+    .feature p { margin: 0 auto; }
+    .feature .phone { max-width: 250px; }
+    .points { justify-items: center; }
+  }
 </style>
 </head>
 <body>
-<main class="card">
-  <div class="mark">DECANT</div>
-  <h1 id="title">Every great bottle, remembered.</h1>
-  <p id="body">A wine diary for you and your friends. Scan a label, rate it, and keep your cellar.</p>
-  <div id="code" class="code hidden"></div>
-  <button id="copy" class="btn ghost-btn hidden" type="button">Copy invite code</button>
-  <a id="store" class="btn" href="https://apps.apple.com/us/app/decant-wine-scanner-cellar/id6827748559">Get Decant on the App Store</a>
-  <a id="open" class="ghost" href="decant://">Already have Decant? Open it</a>
-  <p style="font-size:13px;margin:16px 0 0">Available for iPhone.</p>
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="/"><img src="/img/icon.png" alt="">DECANT</a>
+      <div class="nav-links">
+        <a href="#scan">Scan</a><a href="#cellar">Cellar</a><a href="#friends">Friends</a><a href="/support">Support</a>
+      </div>
+    </nav>
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Wine diary · iPhone</p>
+        <h1>Every great bottle, <em>remembered.</em></h1>
+        <p class="lede">Scan a label, rate what's in your glass, and keep your cellar on real shelves. See what your friends are opening, and save what you want to try next.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://apps.apple.com/us/app/decant-wine-scanner-cellar/id6827748559">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.77-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.76 2.27-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.38-3.68zM14.1 5.86c.63-.77 1.06-1.83.94-2.89-.91.04-2.01.61-2.66 1.37-.58.68-1.1 1.76-.96 2.8 1.02.08 2.05-.52 2.68-1.28z"/></svg>
+            Download on the App Store
+          </a>
+        </div>
+        <p class="note">For iPhone. Decant is invite-only for now: ask a friend for their code.</p>
+      </div>
+      <div class="hero-art">
+        <div class="glow"></div>
+        <div class="phone back"><img src="/img/discover.jpg" alt=""></div>
+        <div class="phone"><img src="/img/cellar.jpg" alt="Decant cellar with 3D bottles on wooden shelves"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="feature" id="scan">
+    <div class="art"><div class="phone"><img src="/img/wine-detail.jpg" alt="Château Margaux 2015 identified in Decant, with ratings" loading="lazy"></div></div>
+    <div>
+      <p class="eyebrow">Scan</p>
+      <h2>Point at a label. That's it.</h2>
+      <p>Decant reads the label and finds the wine, the producer, the region and the vintage. Rate it in a tap, add a few words, and it's in your diary for good.</p>
+      <ul class="points"><li>No typing: it reads the label for you</li><li>Pick the right vintage in one tap</li><li>Private notes stay private</li></ul>
+    </div>
+  </section>
+
+  <section class="feature flip" id="cellar">
+    <div class="art"><div class="phone"><img src="/img/inspect.jpg" alt="A bottle picked up from the cellar, ready to open" loading="lazy"></div></div>
+    <div>
+      <p class="eyebrow">Cellar</p>
+      <h2>Your cellar, on real shelves.</h2>
+      <p>Every bottle you own, drawn with its own label and sorted by style. Pick one up, turn it around, and open it when the time is right.</p>
+      <ul class="points"><li>Know what you have and what you paid</li><li>Open a bottle and log it in one step</li><li>Your whole wine history in one place</li></ul>
+    </div>
+  </section>
+
+  <section class="feature" id="friends">
+    <div class="art"><div class="phone"><img src="/img/discover.jpg" alt="Wine recommendations in Decant" loading="lazy"></div></div>
+    <div>
+      <p class="eyebrow">Friends</p>
+      <h2>Drink with your people.</h2>
+      <p>See what friends are opening, cheer the good ones, and bookmark anything you want to try. Recommendations follow the grapes, regions and styles you love.</p>
+      <ul class="points"><li>A feed of your friends' tastings</li><li>One tap to save a wine to your wishlist</li><li>You choose who sees each review</li></ul>
+    </div>
+  </section>
+
+  <section class="feature flip">
+    <div class="art"><div class="phone"><img src="/img/stats.jpg" alt="Tasting statistics in Decant" loading="lazy"></div></div>
+    <div>
+      <p class="eyebrow">Your palate</p>
+      <h2>Learn what you actually like.</h2>
+      <p>Tastings, countries, regions, average rating and month-by-month history. The more you log, the better Decant knows your taste.</p>
+    </div>
+  </section>
+
+  <section class="invite">
+    <div class="invite-card">
+      <p class="eyebrow">Invite-only</p>
+      <h2>Got an invite?</h2>
+      <p>Open your friend's invite link on your iPhone, or get the app and paste their six-letter code when you sign up.</p>
+      <a class="btn btn-primary" href="https://apps.apple.com/us/app/decant-wine-scanner-cellar/id6827748559">Get Decant</a>
+    </div>
+  </section>
 </main>
-<script>
-  // Universal links open the app directly when it's installed; this page is the fallback.
-  const [, kind, value] = location.pathname.split("/");
-  const safe = (value || "").replace(/[^A-Za-z0-9-]/g, "");
-  const copy = {
-    t: ["A tasting on Decant", "Someone shared a tasting with you. Open it in Decant to see the rating and review."],
-    u: ["A Decant profile", "See their diary, cellar highlights and favourite bottles in Decant."],
-    w: ["A wine on Decant", "See ratings and reviews for this wine in Decant."],
-    invite: ["You're invited to Decant", "Decant is invite-only. Get the app, then paste this code when you sign up. We'll copy it for you."],
-  }[kind];
-  if (copy && safe) {
-    document.getElementById("title").textContent = copy[0];
-    document.getElementById("body").textContent = copy[1];
-    document.getElementById("open").href = `decant://${kind}/${safe}`;
-    if (kind === "invite") {
-      const el = document.getElementById("code");
-      el.textContent = safe.toUpperCase();
-      el.classList.remove("hidden");
-      const copyBtn = document.getElementById("copy");
-      copyBtn.classList.remove("hidden");
-      copyBtn.addEventListener("click", async () => {
-        try { await navigator.clipboard.writeText(safe.toUpperCase()); copyBtn.textContent = "Copied"; }
-        catch { const r = document.createRange(); r.selectNodeContents(el); getSelection().removeAllRanges(); getSelection().addRange(r); }
-      });
-      // Copy the code on the way to the App Store, so it's ready to paste after installing.
-      const store = document.getElementById("store");
-      store.addEventListener("click", async (event) => {
-        event.preventDefault();
-        try { await navigator.clipboard.writeText(safe.toUpperCase()); } catch {}
-        location.href = store.href;
-      });
-    }
-  }
-</script>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 Decant. Please drink responsibly.</span>
+    <nav><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/support">Support</a></nav>
+  </div>
+</footer>
 </body>
 </html>

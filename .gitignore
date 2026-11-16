@@ -13,3 +13,4 @@ supabase/.temp/
 supabase/lwin/out/
 supabase/.branches/
 supabase/.temp/
+.vercel

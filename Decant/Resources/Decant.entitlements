@@ -10,6 +10,8 @@
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>applinks:www.getdecant.xyz</string>
+		<string>applinks:getdecant.xyz</string>
 		<string>applinks:decant-diary.vercel.app</string>
 	</array>
 </dict>

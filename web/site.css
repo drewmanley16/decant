@@ -1,0 +1,57 @@
+:root {
+  --night: #120709; --cellar: #1C0B0F; --deep: #3A0A15; --burgundy: #7A1C2E; --rose: #C9566B;
+  --gold: #C9A46A; --cream: #F7F1EA; --text: #F2ECE4; --muted: #A79D97; --line: #ffffff14;
+  --serif: Fraunces, "New York", Georgia, serif;
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--night); color: var(--text); font: 17px/1.6 var(--sans); }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 600px) { .wrap { padding: 0 16px; } }
+
+/* Nav */
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600;
+         letter-spacing: .38em; font-size: 13px; color: var(--gold); }
+.brand img { width: 30px; height: 30px; border-radius: 8px; }
+.nav-links { display: flex; gap: 22px; font-size: 15px; }
+.nav-links a { text-decoration: none; color: var(--muted); }
+.nav-links a:hover { color: var(--text); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none;
+       font: 600 16px/1 var(--sans); padding: 17px 26px; border-radius: 999px; border: 0; cursor: pointer; }
+.btn-primary { background: var(--cream); color: var(--deep); }
+.btn-primary:hover { background: #fff; }
+.btn-wine { background: var(--burgundy); color: #fff; }
+.btn-outline { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1.5px #ffffff40; }
+.btn svg { width: 18px; height: 18px; }
+
+.eyebrow { color: var(--gold); font-weight: 600; font-size: 12px; letter-spacing: .28em; text-transform: uppercase; margin: 0 0 14px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; margin: 0; }
+
+/* Phone frame around a screenshot */
+.phone { width: 100%; max-width: 300px; aspect-ratio: 1179 / 2556; border-radius: 46px; padding: 9px;
+         background: linear-gradient(160deg, #3a3034, #120c0e 40%, #2a2124); box-shadow: 0 40px 90px #000c, inset 0 0 0 1px #ffffff1c; }
+.phone img { width: 100%; height: 100%; object-fit: cover; border-radius: 38px; }
+
+/* Legal / text pages */
+.doc { max-width: 720px; margin: 0 auto; padding: 24px 24px 96px; }
+.doc h1 { font-size: clamp(34px, 6vw, 46px); line-height: 1.1; margin: 8px 0 6px; }
+.doc h2 { font-size: 24px; margin: 44px 0 10px; }
+.doc p, .doc li { color: #E4DCD3; }
+.doc a { color: var(--gold); }
+.doc .muted { color: var(--muted); }
+.doc .card { background: var(--cellar); border: 1px solid var(--line); border-radius: 20px; padding: 6px 24px; margin: 18px 0; }
+.doc ul { padding-left: 22px; }
+
+/* Footer */
+.foot { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+.foot .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; justify-content: space-between; align-items: center; }
+.foot nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.foot a { text-decoration: none; }
+.foot a:hover { color: var(--text); }

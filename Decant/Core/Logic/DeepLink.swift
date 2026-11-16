@@ -1,6 +1,6 @@
 import Foundation
 
-/// A link into the app: shared as https://decant-diary.vercel.app/<kind>/<id>
+/// A link into the app: shared as https://www.getdecant.xyz/<kind>/<id>
 /// (opens the app when installed) or decant://<kind>/<id> (from notifications).
 enum DeepLink: Hashable, Identifiable, Sendable {
     case entry(UUID)
@@ -8,7 +8,9 @@ enum DeepLink: Hashable, Identifiable, Sendable {
     case wine(UUID)
     case invite(String)
 
-    static let host = "decant-diary.vercel.app"
+    static let host = "www.getdecant.xyz"
+    /// Hosts that open in the app. The old vercel.app address still works for links shared before the move.
+    static let hosts: Set<String> = ["www.getdecant.xyz", "getdecant.xyz", "decant-diary.vercel.app"]
 
     var id: String { path }
 
@@ -19,7 +21,7 @@ enum DeepLink: Hashable, Identifiable, Sendable {
             // decant://t/<id>: the first segment arrives as the host.
             parts = ([url.host ?? ""] + url.pathComponents.filter { $0 != "/" }).filter { !$0.isEmpty }
         case "https", "http":
-            guard url.host?.lowercased() == Self.host else { return nil }
+            guard let host = url.host?.lowercased(), Self.hosts.contains(host) else { return nil }
             parts = url.pathComponents.filter { $0 != "/" }
         default:
             return nil
