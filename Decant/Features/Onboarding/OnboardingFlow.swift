@@ -185,6 +185,7 @@ private extension View {
 
 private struct WelcomeStep: View {
     var next: () -> Void
+    @Environment(AppEnvironment.self) private var env
     @State private var appear = false
     @State private var float = false
     @State private var glow = false
@@ -236,6 +237,10 @@ private struct WelcomeStep: View {
                     .font(.callout)
                     .foregroundStyle(.white.opacity(0.75))
                     .entrance(2, base: 0.45)
+                if let inviter = env.inviter {
+                    InvitedByChip(inviter: inviter)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
                 Spacer()
                 Button("Begin", action: next)
                     .buttonStyle(PrimaryButtonStyle(fill: Palette.gold))
@@ -245,6 +250,7 @@ private struct WelcomeStep: View {
             }
             .padding(.horizontal, 20)
             .multilineTextAlignment(.center)
+            .animation(.smooth(duration: 0.4), value: env.inviter)
             }
         }
         .onAppear {
@@ -638,6 +644,35 @@ private struct SignInStep: View {
 }
 
 /// Decant is invite-only: a new account needs a member's code before it can post.
+/// "Jaden Brown invited you", shown when the app was opened from an invite link.
+private struct InvitedByChip: View {
+    var inviter: Profile
+
+    var body: some View {
+        HStack(spacing: 10) {
+            AvatarView(profile: inviter, size: 30)
+            Text("**\(inviter.displayName)** invited you")
+                .font(.callout)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+        }
+        .padding(.leading, 6).padding(.trailing, 16).padding(.vertical, 6)
+        .background(.white.opacity(0.12), in: Capsule())
+        .overlay(Capsule().strokeBorder(Palette.gold.opacity(0.45), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Pulls a six-character invite code out of pasted text: the bare code, or an invite link.
+func extractInviteCode(_ text: String) -> String? {
+    var candidate = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let range = candidate.range(of: "/invite/", options: .caseInsensitive) {
+        candidate = String(candidate[range.upperBound...])
+    }
+    let code = String(candidate.uppercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }.prefix(6))
+    return code.count == 6 ? code : nil
+}
+
 private struct InviteStep: View {
     var next: () -> Void
     @Environment(AppEnvironment.self) private var env
@@ -660,8 +695,14 @@ private struct InviteStep: View {
                 .entrance(0)
             Text("By invitation").eyebrow().entrance(1)
             Text("Enter your invite code").font(Typo.title).multilineTextAlignment(.center).entrance(2)
-            Text("Decant is invite-only for now. Ask a friend who's already on Decant for their code — you'll find it on their profile.")
-                .multilineTextAlignment(.center).foregroundStyle(Palette.secondaryText).entrance(3)
+            Group {
+                if let inviter = env.inviter {
+                    Text("**\(inviter.displayName)** invited you. Enter or paste the code from their invite.")
+                } else {
+                    Text("Decant is invite-only for now. Ask a friend who's already on Decant for their code — you'll find it on their profile.")
+                }
+            }
+            .multilineTextAlignment(.center).foregroundStyle(Palette.secondaryText).entrance(3)
 
             CodeBoxes(code: code, focused: focused)
                 .overlay {
@@ -683,6 +724,20 @@ private struct InviteStep: View {
                     error = nil
                     if cleaned.count == 6 { Task { await redeem() } }
                 }
+
+            if code.isEmpty {
+                // The system paste button reads the clipboard without the "Allow Paste" alert.
+                PasteButton(payloadType: String.self) { strings in
+                    let pasted = strings.lazy.compactMap(extractInviteCode).first
+                    Task { @MainActor in
+                        if let pasted { code = pasted } else { error = "That doesn't look like an invite code." }
+                    }
+                }
+                .labelStyle(.titleAndIcon)
+                .buttonBorderShape(.capsule)
+                .tint(Palette.burgundy)
+                .entrance(4)
+            }
 
             if let error {
                 Label(error, systemImage: "exclamationmark.circle.fill")
@@ -728,6 +783,8 @@ private struct InviteStep: View {
         busy = true
         defer { busy = false }
         do {
+            // Look the inviter up first: once this code's last use is taken, it no longer resolves.
+            await env.lookUpInviter(code: code)
             env.currentUser = try await env.auth.redeemInvite(code)
             Telemetry.track("invite_redeemed")
             focused = false
@@ -855,11 +912,17 @@ private struct FriendsStep: View {
             ScrollView {
                 VStack(spacing: 10) {
                     ForEach(Array(people.enumerated()), id: \.element.id) { index, person in
+                        let isInviter = person.id == env.inviter?.id
                         HStack(spacing: 12) {
                             AvatarView(profile: person, size: 44)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(person.displayName).font(.headline)
-                                Text(person.bio ?? "@\(person.username)").font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
+                                if isInviter {
+                                    Label("Invited you", systemImage: "envelope.open.fill")
+                                        .font(.caption.weight(.semibold)).foregroundStyle(Palette.burgundy)
+                                } else {
+                                    Text(person.bio ?? "@\(person.username)").font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
+                                }
                             }
                             Spacer()
                             FollowButton(isFollowing: followed.contains(person.id)) {
@@ -883,10 +946,20 @@ private struct FriendsStep: View {
         }
         .padding(28)
         .task {
-            people = (try? await env.social.suggestedUsers(limit: 8)) ?? []
+            var suggested = (try? await env.social.suggestedUsers(limit: 8)) ?? []
             if let me = env.currentUser {
                 followed = Set(((try? await env.social.following(of: me.id)) ?? []).map(\.id))
             }
+            // The person who invited you comes first, already followed; tap to undo.
+            if let inviter = env.inviter, inviter.id != env.currentUser?.id {
+                suggested.removeAll { $0.id == inviter.id }
+                suggested.insert(inviter, at: 0)
+                if !followed.contains(inviter.id), (try? await env.social.follow(inviter.id)) != nil {
+                    followed.insert(inviter.id)
+                    Telemetry.track("inviter_followed")
+                }
+            }
+            people = suggested
         }
     }
 }

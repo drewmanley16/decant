@@ -71,6 +71,9 @@ final class AppEnvironment {
     var pendingLink: DeepLink?
     /// An invite code from a link, pre-filled on the invite step.
     var pendingInviteCode: String?
+    /// Who invited this person, once known from a link or a typed code. Shown during sign-up
+    /// and suggested first on the Friends step.
+    var inviter: Profile?
     @ObservationIgnored private var pushToken: String?
 
     @ObservationIgnored
@@ -136,10 +139,16 @@ final class AppEnvironment {
                 show(needsInvite ? "Invite code ready" : "You're already a member", symbol: "envelope.open.fill")
             }
             pendingInviteCode = code
+            if phase != .ready { Task { await lookUpInviter(code: code) } }
             return
         }
         guard phase == .ready else { return }
         pendingLink = link
+    }
+
+    func lookUpInviter(code: String) async {
+        guard inviter == nil, let profile = await auth.invitePreview(code) else { return }
+        inviter = profile
     }
 
     // MARK: Push notifications
@@ -208,6 +217,7 @@ final class AppEnvironment {
         setBadge(0)
         try? await auth.signOut()
         currentUser = nil
+        inviter = nil
         onboardingComplete = false
         phase = .onboarding
         selectedTab = .discover
@@ -216,6 +226,7 @@ final class AppEnvironment {
     func deleteAccount() async throws {
         try await auth.deleteAccount()
         currentUser = nil
+        inviter = nil
         onboardingComplete = false
         phase = .onboarding
     }

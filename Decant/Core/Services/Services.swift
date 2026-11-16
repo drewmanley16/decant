@@ -37,6 +37,8 @@ protocol AuthService: Sendable {
     func recordTermsAcceptance() async
     // Invite-only membership
     func checkInvite(_ code: String) async throws -> Bool
+    /// The member a code belongs to (public fields only), or nil for an unusable code.
+    func invitePreview(_ code: String) async -> Profile?
     func redeemInvite(_ code: String) async throws -> Profile
     func myInvite() async throws -> InviteStatus
 }

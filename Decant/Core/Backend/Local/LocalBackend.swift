@@ -130,6 +130,8 @@ final class LocalBackend: AuthService, WineCatalogService, TastingService, Socia
     // Local Mode has no other people to invite, so everyone is a member.
     func checkInvite(_ code: String) async throws -> Bool { true }
 
+    func invitePreview(_ code: String) async -> Profile? { nil }
+
     func redeemInvite(_ code: String) async throws -> Profile {
         guard let profile = await restoreSession() else { throw AppError.notSignedIn }
         return profile

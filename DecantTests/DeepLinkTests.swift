@@ -24,4 +24,12 @@ struct DeepLinkTests {
             #expect(DeepLink(url: link.url) == link)
         }
     }
+
+    @Test func extractsInviteCodeFromPastedText() {
+        #expect(extractInviteCode("ayu3vq") == "AYU3VQ")
+        #expect(extractInviteCode("  AYU3VQ\n") == "AYU3VQ")
+        #expect(extractInviteCode("https://decant-diary.vercel.app/invite/AYU3VQ") == "AYU3VQ")
+        #expect(extractInviteCode("Join me on Decant: https://decant-diary.vercel.app/invite/ayu3vq") == "AYU3VQ")
+        #expect(extractInviteCode("abc") == nil)
+    }
 }

@@ -50,7 +50,7 @@
     t: ["A tasting on Decant", "Someone shared a tasting with you. Open it in Decant to see the rating and review."],
     u: ["A Decant profile", "See their diary, cellar highlights and favourite bottles in Decant."],
     w: ["A wine on Decant", "See ratings and reviews for this wine in Decant."],
-    invite: ["You're invited to Decant", "Decant is invite-only. Get the app, then enter this code when you sign up."],
+    invite: ["You're invited to Decant", "Decant is invite-only. Get the app, then paste this code when you sign up. We'll copy it for you."],
   }[kind];
   if (copy && safe) {
     document.getElementById("title").textContent = copy[0];
@@ -65,6 +65,13 @@
       copyBtn.addEventListener("click", async () => {
         try { await navigator.clipboard.writeText(safe.toUpperCase()); copyBtn.textContent = "Copied"; }
         catch { const r = document.createRange(); r.selectNodeContents(el); getSelection().removeAllRanges(); getSelection().addRange(r); }
+      });
+      // Copy the code on the way to the App Store, so it's ready to paste after installing.
+      const store = document.getElementById("store");
+      store.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try { await navigator.clipboard.writeText(safe.toUpperCase()); } catch {}
+        location.href = store.href;
       });
     }
   }

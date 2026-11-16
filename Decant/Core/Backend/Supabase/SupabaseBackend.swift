@@ -182,6 +182,17 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         }
     }
 
+    func invitePreview(_ code: String) async -> Profile? {
+        struct Row: Decodable { var id: UUID; var username: String; var displayName: String; var avatarUrl: String? }
+        return try? await run {
+            let data = try await client.rpc("invite_preview", params: ["p_code": code]).execute().data
+            guard let row = try decode([Row].self, data).first else { return nil }
+            return Profile(id: row.id, username: row.username, displayName: row.displayName.isEmpty ? row.username : row.displayName,
+                           avatarURL: row.avatarUrl.flatMap(URL.init(string:)), bio: nil, isPrivate: false,
+                           favoriteTypes: [], defaultVisibility: .everyone, createdAt: .now)
+        }
+    }
+
     func redeemInvite(_ code: String) async throws -> Profile {
         let id = try await me()
         return try await run {
