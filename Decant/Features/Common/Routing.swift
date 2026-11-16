@@ -59,6 +59,6 @@ struct WineDetailLoader: View {
 
     private func load() async {
         state = .loading
-        do { state = .loaded(try await env.catalog.wine(id: id)) } catch { state = .failed(error.localizedDescription) }
+        do { state = .loaded(try await env.catalog.wine(id: id)) } catch { state.fail(error) }
     }
 }

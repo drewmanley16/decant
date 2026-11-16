@@ -61,7 +61,7 @@ final class CellarViewModel {
             await loadHistory()
             relayout()
         } catch {
-            bottles = .failed(error.localizedDescription)
+            bottles.fail(error)
         }
     }
 

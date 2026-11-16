@@ -41,7 +41,7 @@ final class WineDetailViewModel {
         vintages = (await vintagesTask ?? []).filter { $0.bottleSizeML == wine.bottleSizeML }
         switch await reviewsTask {
         case .success(let list): reviews = .loaded(list)
-        case .failure(let error): reviews = .failed(error.localizedDescription)
+        case .failure(let error): reviews.fail(error)
         }
         friendRatings = await friendsTask ?? []
         isWishlisted = (await wishlistTask ?? []).contains { $0.wine.id == wine.id }

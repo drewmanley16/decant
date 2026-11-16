@@ -63,7 +63,7 @@ final class SearchViewModel {
         let peopleText = peopleText
         let (catalog, social, query) = (env.catalog, env.social, query)
         async let wineResult: Loadable<[Wine]> = {
-            do { return .loaded(try await catalog.search(query, limit: 60)) } catch { return .failed(error.localizedDescription) }
+            do { return .loaded(try await catalog.search(query, limit: 60)) } catch { var state = Loadable<[Wine]>.loading; state.fail(error); return state }
         }()
         async let peopleResult: [Profile] = {
             guard let peopleText else { return [] }
@@ -274,7 +274,7 @@ struct FindPeopleView: View {
             await follows?.loadIfNeeded()
             people = .loaded(result)
         } catch {
-            people = .failed(error.localizedDescription)
+            people.fail(error)
         }
     }
 }

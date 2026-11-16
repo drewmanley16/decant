@@ -42,8 +42,8 @@ final class DiscoverViewModel {
             recentlyViewed = await recentTask ?? []
             unreadNotifications = (await notificationsTask ?? []).filter { !$0.isRead }.count
         } catch {
-            if sections.value == nil { sections = .failed(error.localizedDescription) }
-            if feed.value == nil { feed = .failed(error.localizedDescription) }
+            sections.fail(error)
+            feed.fail(error)
         }
     }
 

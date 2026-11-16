@@ -164,6 +164,6 @@ struct BlockedUsersView: View {
     }
 
     private func load() async {
-        do { people = .loaded(try await env.social.blockedUsers()) } catch { people = .failed(error.localizedDescription) }
+        do { people = .loaded(try await env.social.blockedUsers()) } catch { people.fail(error) }
     }
 }

@@ -136,7 +136,7 @@ private struct ProfileContent: View {
                 if isMe { await loadShortcutCounts() }
             }
         } catch {
-            summary = .failed(error.localizedDescription)
+            summary.fail(error)
         }
     }
 
@@ -481,7 +481,7 @@ struct WishlistView: View {
     }
 
     private func load() async {
-        do { items = .loaded(try await env.cellar.wishlist()) } catch { items = .failed(error.localizedDescription) }
+        do { items = .loaded(try await env.cellar.wishlist()) } catch { items.fail(error) }
     }
 }
 
@@ -525,6 +525,6 @@ struct NotificationsView: View {
     }
 
     private func load() async {
-        do { items = .loaded(try await env.social.notifications()) } catch { items = .failed(error.localizedDescription) }
+        do { items = .loaded(try await env.social.notifications()) } catch { items.fail(error) }
     }
 }

@@ -152,3 +152,25 @@ struct CellarWallTests {
         #expect(!CellarFilter(minRating: 4).matches(bottle, rating: 3.5))
     }
 }
+
+struct LoadableFailureTests {
+    @Test func cancellationIsIgnored() {
+        var state = Loadable<Int>.loading
+        state.fail(CancellationError())
+        #expect(state.isLoading)
+        state.fail(URLError(.cancelled))
+        #expect(state.isLoading)
+    }
+
+    @Test func failedRefreshKeepsLoadedData() {
+        var state = Loadable<Int>.loaded(3)
+        state.fail(URLError(.networkConnectionLost))
+        #expect(state.value == 3)
+    }
+
+    @Test func firstLoadFailureIsShown() {
+        var state = Loadable<Int>.loading
+        state.fail(URLError(.notConnectedToInternet))
+        if case .failed = state {} else { Issue.record("expected .failed") }
+    }
+}

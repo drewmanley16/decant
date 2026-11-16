@@ -510,6 +510,6 @@ struct ScanHistoryView: View {
     }
 
     private func load() async {
-        do { records = .loaded(try await env.scans.history(limit: 100)) } catch { records = .failed(error.localizedDescription) }
+        do { records = .loaded(try await env.scans.history(limit: 100)) } catch { records.fail(error) }
     }
 }

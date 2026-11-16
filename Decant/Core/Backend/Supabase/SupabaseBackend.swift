@@ -52,6 +52,7 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
     }
 
     private func mapError(_ error: Error) -> Error {
+        if error.isCancellation { return CancellationError() }
         if error is AppError { return error }
         if let urlError = error as? URLError { return AppError.network(urlError.localizedDescription) }
         return AppError.server(error.localizedDescription)
@@ -63,18 +64,39 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
     private func run<T>(_ operation: String = #function, _ body: () async throws -> T) async throws -> T {
         let start = ContinuousClock.now
         do {
-            let result = try await body()
+            let result: T
+            do {
+                result = try await body()
+            } catch let error as URLError where Self.isRetryable(error) && Self.readOperations.contains(Self.opName(operation)) {
+                // After the app has been in the background, the first request often hits a stale
+                // connection ("The network connection was lost"). Reads are safe to try once more.
+                try await Task.sleep(for: .milliseconds(350))
+                Telemetry.track("api_retry", ["op": Self.opName(operation), "code": String(error.code.rawValue)])
+                result = try await body()
+            }
             let ms = Self.milliseconds(since: start)
             if ms >= 1500 { Telemetry.track("slow_call", ["op": Self.opName(operation), "ms": String(ms)]) }
             return result
         } catch {
             let mapped = mapError(error)
-            if !(error is CancellationError), (error as? URLError)?.code != .cancelled {
+            if !error.isCancellation {
                 Telemetry.track("api_error", ["op": Self.opName(operation), "error": mapped.localizedDescription,
                                               "ms": String(Self.milliseconds(since: start))])
             }
             throw mapped
         }
+    }
+
+    /// Calls that only read, so repeating them can't duplicate anything.
+    private static let readOperations: Set<String> = [
+        "restoreSession", "checkInvite", "invitePreview", "myInvite", "search", "wine", "vintages", "catalogSample",
+        "recentlyViewed", "entries", "reviews", "friendRatings", "entry", "profileSummary", "searchUsers",
+        "suggestedUsers", "following", "followers", "feed", "comments", "reactors", "notifications", "blockedUsers",
+        "bottles", "placements", "collections", "settings", "wishlist", "history", "cachedMatch",
+    ]
+
+    private static func isRetryable(_ error: URLError) -> Bool {
+        [.networkConnectionLost, .timedOut, .cannotConnectToHost, .dnsLookupFailed].contains(error.code)
     }
 
     private static func milliseconds(since start: ContinuousClock.Instant) -> Int {

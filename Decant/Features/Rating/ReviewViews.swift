@@ -493,7 +493,7 @@ struct ReviewThreadView: View {
             var seen = Set(mentionable.map(\.id))
             for person in people where seen.insert(person.id).inserted { mentionable.append(person) }
         } catch {
-            item = .failed(error.localizedDescription)
+            item.fail(error)
         }
     }
 
@@ -678,6 +678,6 @@ struct ReactorsSheet: View {
     }
 
     private func load() async {
-        do { people = .loaded(try await env.social.reactors(entryID: entryID)) } catch { people = .failed(error.localizedDescription) }
+        do { people = .loaded(try await env.social.reactors(entryID: entryID)) } catch { people.fail(error) }
     }
 }

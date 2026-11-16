@@ -2,11 +2,28 @@ import SwiftUI
 
 // MARK: - Load state
 
+extension Error {
+    /// A request cancelled because its task was (navigating away, a newer load starting).
+    var isCancellation: Bool {
+        if self is CancellationError { return true }
+        if let url = self as? URLError, url.code == .cancelled { return true }
+        return (self as NSError).domain == NSURLErrorDomain && (self as NSError).code == NSURLErrorCancelled
+    }
+}
+
 enum Loadable<Value> {
     case idle
     case loading
     case loaded(Value)
     case failed(String)
+
+    /// Records a failed load. A cancelled request (the screen went away or reloaded) changes
+    /// nothing, and a failed refresh keeps what's already on screen rather than replacing it.
+    mutating func fail(_ error: Error) {
+        if error.isCancellation { return }
+        if case .loaded = self { return }
+        self = .failed(error.localizedDescription)
+    }
 
     var value: Value? {
         if case .loaded(let value) = self { return value }
