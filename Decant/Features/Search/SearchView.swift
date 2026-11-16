@@ -1,44 +1,22 @@
 import SwiftUI
 
+/// Follow state shared by every list of people.
 @MainActor
 @Observable
-final class SearchViewModel {
-    enum Scope: String, CaseIterable, Identifiable {
-        case wines = "Wines"
-        case people = "People"
-        var id: String { rawValue }
-    }
-
-    var scope: Scope = .wines
-    var query = WineSearchQuery()
-    var wines: Loadable<[Wine]> = .idle
-    var people: Loadable<[Profile]> = .idle
+final class FollowTracker {
     var following: Set<UUID> = []
     private let env: AppEnvironment
+    private var loaded = false
 
-    init(env: AppEnvironment) {
-        self.env = env
+    init(env: AppEnvironment) { self.env = env }
+
+    func loadIfNeeded() async {
+        guard !loaded, let me = env.currentUser else { return }
+        loaded = true
+        following = Set(((try? await env.social.following(of: me.id)) ?? []).map(\.id))
     }
 
-    func run() async {
-        switch scope {
-        case .wines:
-            wines = .loading
-            do { wines = .loaded(try await env.catalog.search(query, limit: 60)) } catch { wines = .failed(error.localizedDescription) }
-        case .people:
-            people = .loading
-            do {
-                people = .loaded(try await env.social.searchUsers(query.text))
-                if let me = env.currentUser {
-                    following = Set(((try? await env.social.following(of: me.id)) ?? []).map(\.id))
-                }
-            } catch {
-                people = .failed(error.localizedDescription)
-            }
-        }
-    }
-
-    func toggleFollow(_ profile: Profile) async {
+    func toggle(_ profile: Profile) async {
         let isFollowing = following.contains(profile.id)
         do {
             if isFollowing {
@@ -55,6 +33,50 @@ final class SearchViewModel {
     }
 }
 
+@MainActor
+@Observable
+final class SearchViewModel {
+    var query = WineSearchQuery()
+    var wines: Loadable<[Wine]> = .idle
+    /// People whose name or username matches the text; empty when nothing is typed.
+    var people: [Profile] = []
+    let follows: FollowTracker
+    private let env: AppEnvironment
+
+    /// How many matching people show above the wines before "See all".
+    static let peoplePreview = 3
+
+    init(env: AppEnvironment) {
+        self.env = env
+        self.follows = FollowTracker(env: env)
+    }
+
+    private var peopleText: String? {
+        let text = query.text.trimmingCharacters(in: .whitespaces)
+        let bare = text.hasPrefix("@") ? String(text.dropFirst()) : text
+        // Filters only narrow wines, so a filtered search is clearly about wine.
+        return bare.count >= 2 && !query.hasFilters && query.types.isEmpty ? bare : nil
+    }
+
+    func run() async {
+        wines = .loading
+        let peopleText = peopleText
+        let (catalog, social, query) = (env.catalog, env.social, query)
+        async let wineResult: Loadable<[Wine]> = {
+            do { return .loaded(try await catalog.search(query, limit: 60)) } catch { return .failed(error.localizedDescription) }
+        }()
+        async let peopleResult: [Profile] = {
+            guard let peopleText else { return [] }
+            return (try? await social.searchUsers(peopleText)) ?? []
+        }()
+        let (w, p) = await (wineResult, peopleResult)
+        guard !Task.isCancelled else { return }
+        people = p
+        wines = w
+        if !p.isEmpty { await follows.loadIfNeeded() }
+    }
+}
+
 struct SearchView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var model: SearchViewModel?
@@ -66,6 +88,12 @@ struct SearchView: View {
             }
             .screenBackground()
             .navigationTitle("Search")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.findPeople("")) { Image(systemName: "person.badge.plus") }
+                        .accessibilityLabel("Find people")
+                }
+            }
             .appDestinations()
         }
         .task {
@@ -78,63 +106,66 @@ struct SearchView: View {
 }
 
 private struct SearchContent: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
     @Bindable var model: SearchViewModel
     @State private var showFilters = false
 
     var body: some View {
         List {
-            Section {
-                Picker("Search for", selection: $model.scope) {
-                    ForEach(SearchViewModel.Scope.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 0, leading: Metrics.gutter, bottom: 4, trailing: Metrics.gutter))
-
-                if model.scope == .wines {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            Button { showFilters = true } label: {
-                                Chip(title: "Filters", isSelected: model.query.hasFilters, systemImage: "slider.horizontal.3")
-                            }
-                            ForEach(WineType.allCases) { type in
-                                Button {
-                                    if model.query.types.contains(type) { model.query.types.remove(type) } else { model.query.types.insert(type) }
-                                } label: { Chip(title: type.displayName, isSelected: model.query.types.contains(type)) }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, Metrics.gutter)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Button { showFilters = true } label: {
+                        Chip(title: "Filters", isSelected: model.query.hasFilters, systemImage: "slider.horizontal.3")
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
+                    ForEach(WineType.allCases) { type in
+                        Button {
+                            if model.query.types.contains(type) { model.query.types.remove(type) } else { model.query.types.insert(type) }
+                        } label: { Chip(title: type.displayName, isSelected: model.query.types.contains(type)) }
+                    }
                 }
+                .buttonStyle(.plain)
+                .padding(.horizontal, Metrics.gutter)
             }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
             .listRowSeparator(.hidden)
 
-            switch model.scope {
-            case .wines: wineResults
-            case .people: peopleResults
+            if !model.people.isEmpty {
+                ResultsHeader(title: "People")
+                ForEach(model.people.prefix(SearchViewModel.peoplePreview)) { profile in
+                    PersonRow(profile: profile, follows: model.follows)
+                }
+                if model.people.count > SearchViewModel.peoplePreview {
+                    NavigationLink(value: Route.findPeople(model.query.text)) {
+                        Text("See all \(model.people.count) people").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.burgundy)
+                    }
+                    .listRowBackground(Color.clear)
+                }
+                ResultsHeader(title: "Wines")
             }
+            wineResults
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .searchable(text: $model.query.text, prompt: model.scope == .wines ? "Wine, winery, grape, region…" : "Name or username")
+        .searchable(text: $model.query.text, prompt: "Wines, wineries, grapes, people…")
         .task(id: model.query) {
             try? await Task.sleep(for: .milliseconds(250)) // debounce typing
+            guard !Task.isCancelled else { return }
             await model.run()
         }
-        .onChange(of: model.scope) { Task { await model.run() } }
         .sheet(isPresented: $showFilters) { SearchFilterSheet(query: $model.query) }
     }
 
     @ViewBuilder private var wineResults: some View {
         switch model.wines {
         case .loaded(let wines) where wines.isEmpty:
-            EmptyStateView(symbol: "magnifyingglass", title: "No wines found",
-                           message: "Try a different spelling, fewer filters — or scan the label.")
-                .listRowBackground(Color.clear)
+            if model.people.isEmpty {
+                EmptyStateView(symbol: "magnifyingglass", title: "No results",
+                               message: "Try a different spelling, fewer filters — or scan the label.")
+                    .listRowBackground(Color.clear)
+            } else {
+                Text("No wines match “\(model.query.text)”.").font(.callout).foregroundStyle(Palette.secondaryText)
+                    .listRowBackground(Color.clear)
+            }
         case .loaded(let wines):
             ForEach(wines) { wine in
                 NavigationLink(value: Route.wine(wine)) { WineRow(wine: wine) }
@@ -146,40 +177,104 @@ private struct SearchContent: View {
             ForEach(0..<4, id: \.self) { _ in SkeletonBlock(height: 70).listRowBackground(Color.clear) }
         }
     }
+}
 
-    @ViewBuilder private var peopleResults: some View {
-        switch model.people {
-        case .loaded(let people) where people.isEmpty:
-            EmptyStateView(symbol: "person.2", title: "No one found", message: "Search by name or @username.")
-                .listRowBackground(Color.clear)
-        case .loaded(let people):
-            ForEach(people) { profile in
-                // At accessibility sizes the Follow button drops below the name
-                // so long usernames don't get split mid-word.
-                let layout = typeSize.isAccessibilitySize
-                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
-                    : AnyLayout(HStackLayout(spacing: 12))
-                layout {
-                    NavigationLink(value: Route.user(profile.id)) {
-                        HStack(spacing: 12) {
-                            AvatarView(profile: profile, size: 44)
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 4) {
-                                    Text(profile.displayName).font(.headline)
-                                    if profile.isPrivate { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Palette.secondaryText) }
-                                }
-                                Text("@\(profile.username)").font(.subheadline).foregroundStyle(Palette.secondaryText)
-                            }
+private struct ResultsHeader: View {
+    var title: String
+    var body: some View {
+        Text(title).font(.footnote.weight(.semibold)).textCase(.uppercase).tracking(0.6)
+            .foregroundStyle(Palette.secondaryText)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 10)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// A person with their avatar, name and a follow button.
+struct PersonRow: View {
+    var profile: Profile
+    var follows: FollowTracker
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        // At accessibility sizes the Follow button drops below the name
+        // so long usernames don't get split mid-word.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+            : AnyLayout(HStackLayout(spacing: 12))
+        layout {
+            NavigationLink(value: Route.user(profile.id)) {
+                HStack(spacing: 12) {
+                    AvatarView(profile: profile, size: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Text(profile.displayName).font(.headline)
+                            if profile.isPrivate { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Palette.secondaryText) }
                         }
+                        Text("@\(profile.username)").font(.subheadline).foregroundStyle(Palette.secondaryText)
                     }
-                    FollowButton(isFollowing: model.following.contains(profile.id)) { Task { await model.toggleFollow(profile) } }
                 }
-                .listRowBackground(Color.clear)
             }
-        case .failed(let message):
-            ErrorStateView(message: message) { Task { await model.run() } }.listRowBackground(Color.clear)
-        default:
-            ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
+            FollowButton(isFollowing: follows.following.contains(profile.id)) { Task { await follows.toggle(profile) } }
+        }
+        .listRowBackground(Color.clear)
+    }
+}
+
+/// Look people up by name, with suggestions before anything is typed.
+struct FindPeopleView: View {
+    var initialText: String
+    @Environment(AppEnvironment.self) private var env
+    @State private var text = ""
+    @State private var people: Loadable<[Profile]> = .idle
+    @State private var follows: FollowTracker?
+
+    var body: some View {
+        List {
+            switch people {
+            case .loaded(let list) where list.isEmpty:
+                EmptyStateView(symbol: "person.2", title: "No one found", message: "Search by name or @username — or share your invite code from Profile.")
+                    .listRowBackground(Color.clear)
+            case .loaded(let list):
+                if trimmed.isEmpty { ResultsHeader(title: "Suggested") }
+                if let follows {
+                    ForEach(list) { PersonRow(profile: $0, follows: follows) }
+                }
+            case .failed(let message):
+                ErrorStateView(message: message) { Task { await load() } }.listRowBackground(Color.clear)
+            default:
+                ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .screenBackground()
+        .navigationTitle("Find people")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $text, placement: .navigationBarDrawer(displayMode: .always), prompt: "Name or @username")
+        .onAppear { if follows == nil { text = initialText; follows = FollowTracker(env: env) } }
+        .task(id: text) {
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            await load()
+        }
+    }
+
+    private var trimmed: String {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        return t.hasPrefix("@") ? String(t.dropFirst()) : t
+    }
+
+    private func load() async {
+        if case .loaded = people {} else { people = .loading }
+        do {
+            let result = try await env.social.searchUsers(trimmed)
+            await follows?.loadIfNeeded()
+            people = .loaded(result)
+        } catch {
+            people = .failed(error.localizedDescription)
         }
     }
 }

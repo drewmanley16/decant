@@ -17,6 +17,10 @@ struct ProfileView: View {
                     NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
                         .accessibilityLabel("Settings")
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.findPeople("")) { Image(systemName: "person.badge.plus") }
+                        .accessibilityLabel("Find people")
+                }
                 if let me = env.currentUser {
                     ToolbarItem(placement: .topBarLeading) {
                         ShareLink(item: DeepLink.user(me.id).url, message: Text("My wine diary on Decant")) {

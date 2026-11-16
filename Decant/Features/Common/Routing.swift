@@ -14,6 +14,7 @@ enum Route: Hashable {
     case followers(UUID)
     case following(UUID)
     case milestones
+    case findPeople(String)
 }
 
 extension View {
@@ -32,6 +33,7 @@ extension View {
             case .followers(let id): PeopleListView(userID: id, kind: .followers)
             case .following(let id): PeopleListView(userID: id, kind: .following)
             case .milestones: MilestonesView()
+            case .findPeople(let text): FindPeopleView(initialText: text)
             }
         }
     }

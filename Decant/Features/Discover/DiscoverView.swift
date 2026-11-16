@@ -116,8 +116,14 @@ struct DiscoverView: View {
 private struct DiscoverContent: View {
     var model: DiscoverViewModel
     @Environment(AppEnvironment.self) private var env
+    @State private var showFindPeople = false
 
     var body: some View {
+        content
+            .navigationDestination(isPresented: $showFindPeople) { FindPeopleView(initialText: "") }
+    }
+
+    private var content: some View {
         LazyVStack(alignment: .leading, spacing: 28) {
             if model.myTastingCount == 0 { FirstLogCard() }
             switch model.sections {
@@ -163,7 +169,7 @@ private struct DiscoverContent: View {
             case .loaded(let all) where friendItems(all).isEmpty:
                 EmptyStateView(symbol: "person.2", title: "Your feed is quiet",
                                message: "Follow friends to see what they're tasting.", actionTitle: "Find friends") {
-                    env.selectedTab = .search
+                    showFindPeople = true
                 }
             case .loaded(let all):
                 let items = friendItems(all)
