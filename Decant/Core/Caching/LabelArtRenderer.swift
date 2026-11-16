@@ -88,8 +88,8 @@ enum LabelArtRenderer {
 
             draw(wine.producer.uppercased(), in: CGRect(x: 60, y: 136, width: size.width - 120, height: 30),
                  size: 20, weight: .medium, color: style.ink.withAlphaComponent(0.8), kern: 3)
-            draw(wine.name, in: CGRect(x: 56, y: 170, width: size.width - 112, height: 120),
-                 size: wine.name.count > 22 ? 40 : 52, weight: .semibold, color: style.ink, lines: 2)
+            draw(wine.name, in: CGRect(x: 76, y: 170, width: size.width - 152, height: 120),
+                 size: 52, weight: .semibold, color: style.ink, lines: 2)
 
             let locale = [wine.appellation ?? wine.region, wine.country].compactMap { $0 }.joined(separator: " · ")
             draw(locale.uppercased(), in: CGRect(x: 60, y: size.height - 152, width: size.width - 120, height: 26),
@@ -103,19 +103,42 @@ enum LabelArtRenderer {
 
     private static func draw(_ text: String, in rect: CGRect, size: CGFloat, weight: UIFont.Weight,
                              color: UIColor, kern: CGFloat = 0, lines: Int = 1) {
-        let base = UIFont.systemFont(ofSize: size, weight: weight)
-        let font = base.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: size) } ?? base
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
-        paragraph.lineBreakMode = lines == 1 ? .byTruncatingTail : .byWordWrapping
+        paragraph.lineBreakMode = .byWordWrapping
         paragraph.lineHeightMultiple = 0.92
-        let attributed = NSAttributedString(string: text, attributes: [
-            .font: font, .foregroundColor: color, .paragraphStyle: paragraph, .kern: kern,
-        ])
-        let bounds = attributed.boundingRect(with: rect.size, options: [.usesLineFragmentOrigin], context: nil)
+
+        func attributed(_ pointSize: CGFloat) -> NSAttributedString {
+            let base = UIFont.systemFont(ofSize: pointSize, weight: weight)
+            let font = base.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: pointSize) } ?? base
+            return NSAttributedString(string: text, attributes: [
+                .font: font, .foregroundColor: color, .paragraphStyle: paragraph, .kern: kern * pointSize / size,
+            ])
+        }
+        /// Fits when every word sits on one line (no mid-word breaks) and the text takes at most `lines` lines.
+        func fits(_ string: NSAttributedString, _ pointSize: CGFloat) -> Bool {
+            let longestWord = text.split(separator: " ").map { word in
+                NSAttributedString(string: String(word), attributes: string.attributes(at: 0, effectiveRange: nil)).size().width
+            }.max() ?? 0
+            guard longestWord <= rect.width else { return false }
+            let height = string.boundingRect(with: CGSize(width: rect.width, height: .greatestFiniteMagnitude),
+                                             options: [.usesLineFragmentOrigin], context: nil).height
+            let lineHeight = UIFont.systemFont(ofSize: pointSize, weight: weight).lineHeight * 0.92
+            return height <= min(rect.height, lineHeight * CGFloat(lines)) + 1
+        }
+
+        // Shrink long names to fit instead of cutting them off, down to 45% of the design size.
+        var pointSize = size
+        var string = attributed(pointSize)
+        while !fits(string, pointSize), pointSize > size * 0.45 {
+            pointSize *= 0.93
+            string = attributed(pointSize)
+        }
+        let bounds = string.boundingRect(with: CGSize(width: rect.width, height: rect.height),
+                                         options: [.usesLineFragmentOrigin], context: nil)
         let y = rect.minY + max(0, (rect.height - bounds.height) / 2)
-        attributed.draw(with: CGRect(x: rect.minX, y: y, width: rect.width, height: rect.height),
-                        options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], context: nil)
+        string.draw(with: CGRect(x: rect.minX, y: y, width: rect.width, height: rect.height),
+                    options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], context: nil)
     }
 }
 

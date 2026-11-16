@@ -73,6 +73,8 @@ private struct ProfileContent: View {
     @State private var summary: Loadable<ProfileSummary> = .idle
     @State private var diary: [ReviewItem] = []
     @State private var stats = WineStats()
+    /// False until the diary arrives, so stats and the diary show placeholders, not zeros.
+    @State private var contentLoaded = false
     @State private var shortcutCounts: (wishlist: Int, scans: Int, milestones: String)?
     @State private var editing = false
     @State private var invite: InviteStatus?
@@ -122,11 +124,15 @@ private struct ProfileContent: View {
 
     private func load() async {
         do {
+            // Fetch the invite alongside the header, so the card doesn't pop in and push the page down.
+            async let myInvite: InviteStatus? = isMe ? (try? await env.auth.myInvite()) : nil
             let s = try await env.social.profileSummary(userID: userID)
+            if isMe { invite = await myInvite }
             summary = .loaded(s)
             if s.canViewContent {
                 diary = try await env.tastings.entries(forUser: userID)
                 stats = StatsCalculator.compute(diary)
+                withAnimation(.smooth(duration: 0.25)) { contentLoaded = true }
                 if isMe { await loadShortcutCounts() }
             }
         } catch {
@@ -138,7 +144,6 @@ private struct ProfileContent: View {
         async let wishlist = try? env.cellar.wishlist()
         async let scans = try? env.scans.history(limit: 500)
         async let bottles = try? env.cellar.bottles()
-        invite = try? await env.auth.myInvite()
         let milestones = StatsCalculator.milestones(history: StatsCalculator.history(diary), bottles: await bottles ?? [])
         shortcutCounts = (await wishlist?.count ?? 0, await scans?.count ?? 0,
                           "\(milestones.filter(\.achieved).count)/\(milestones.count)")
@@ -286,6 +291,7 @@ private struct ProfileContent: View {
                           spacing: 14) {
                     ForEach(cells, id: \.1) { statCell($0.0, $0.1) }
                 }
+                .redacted(reason: contentLoaded ? [] : .placeholder)
             }
             .foregroundStyle(Palette.charcoal)
             .cardSurface()
@@ -306,7 +312,9 @@ private struct ProfileContent: View {
     @ViewBuilder private var diarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Diary", subtitle: diary.isEmpty ? nil : "\(diary.count) tasting\(diary.count == 1 ? "" : "s")")
-            if diary.isEmpty {
+            if !contentLoaded {
+                ForEach(0..<3, id: \.self) { _ in SkeletonBlock(height: 64) }
+            } else if diary.isEmpty {
                 EmptyStateView(symbol: "book.closed", title: "No tastings yet",
                                message: isMe ? "Scan or search for a wine and rate it to start your diary." : "Nothing logged yet.",
                                actionTitle: isMe ? "Scan a wine" : nil, action: isMe ? { env.isScannerPresented = true } : nil)

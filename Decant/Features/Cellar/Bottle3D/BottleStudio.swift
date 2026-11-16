@@ -10,7 +10,7 @@ final class BottleStudio {
     static let shared = BottleStudio()
 
     /// Bump when the look changes so cached renders are redrawn.
-    nonisolated static let renderVersion = 11
+    nonisolated static let renderVersion = 12
     /// Every thumbnail shares one canvas so bottles keep their real relative heights.
     nonisolated static let canvasHeightMetres: Float = 0.37
     nonisolated static let canvasAspect: CGFloat = 0.34

@@ -109,9 +109,13 @@ enum ShareCardRenderer {
 /// UIKit share sheet (iMessage, Instagram Stories, Save Image, etc.).
 struct ActivityView: UIViewControllerRepresentable {
     var items: [Any]
+    /// Called with true when the person actually shared (not cancelled).
+    var onComplete: ((Bool) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, completed, _, _ in onComplete?(completed) }
+        return controller
     }
 
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
@@ -122,6 +126,11 @@ struct ShareWineSheet: View {
     var wine: Wine
     var rating: Double?
     var review: String?
+    /// Whose tasting this is; defaults to you.
+    var author: Profile? = nil
+    /// Where the shared link points; defaults to the wine's page.
+    var link: URL? = nil
+    var onShared: (() -> Void)? = nil
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
     @State private var image: UIImage?
@@ -154,10 +163,14 @@ struct ShareWineSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .sheet(isPresented: $showActivity) {
-                if let image { ActivityView(items: [image, "\(wine.displayName) on Decant", DeepLink.wine(wine.id).url]) }
+                if let image {
+                    ActivityView(items: [image, "\(wine.displayName) on Decant", link ?? DeepLink.wine(wine.id).url]) { completed in
+                        if completed { onShared?() }
+                    }
+                }
             }
             .task {
-                image = await ShareCardRenderer.render(wine: wine, rating: rating, review: review, author: env.currentUser)
+                image = await ShareCardRenderer.render(wine: wine, rating: rating, review: review, author: author ?? env.currentUser)
             }
         }
     }

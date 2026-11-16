@@ -13,6 +13,7 @@ struct ReviewCard: View {
     @State private var socialOverride: EntrySocial?
     @State private var showsBurst = false
     @State private var showsReactors = false
+    @State private var sharing = false
 
     private var social: EntrySocial? { socialOverride ?? item.entry.social }
 
@@ -138,13 +139,17 @@ struct ReviewCard: View {
                 Image(systemName: "face.smiling").foregroundStyle(Palette.secondaryText)
             }
             .accessibilityLabel("React")
-            ShareLink(item: DeepLink.entry(item.id).url,
-                      message: Text("\(item.author.displayName) on \(item.wine.displayName)")) {
+            Button { sharing = true } label: {
                 Label(social.map { $0.shareCount > 0 ? "\($0.shareCount)" : "" } ?? "", systemImage: "square.and.arrow.up")
                     .foregroundStyle(Palette.secondaryText)
             }
-            .simultaneousGesture(TapGesture().onEnded { Task { await env.social.recordShare(entryID: item.id) } })
             .accessibilityLabel("Share")
+            .sheet(isPresented: $sharing) {
+                ShareWineSheet(wine: item.wine, rating: item.entry.rating, review: item.entry.review,
+                               author: item.author, link: DeepLink.entry(item.id).url) {
+                    Task { await env.social.recordShare(entryID: item.id) }
+                }
+            }
             Spacer()
             if let location = item.entry.location {
                 Label(location, systemImage: "mappin").font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
@@ -250,6 +255,7 @@ struct ReviewThreadView: View {
     @State private var sending = false
     @State private var confirmDelete = false
     @State private var editingItem: ReviewItem?
+    @State private var sharingItem: ReviewItem?
     @State private var replyingTo: ReviewComment?
     @State private var pendingDelete: ReviewComment?
     /// People who can be @mentioned: who you follow, plus everyone in this thread.
@@ -309,14 +315,17 @@ struct ReviewThreadView: View {
         .sheet(item: $editingItem) { review in
             RateWineView(wine: review.wine, editing: review.entry)
         }
+        .sheet(item: $sharingItem) { review in
+            ShareWineSheet(wine: review.wine, rating: review.entry.rating, review: review.entry.review,
+                           author: review.author, link: DeepLink.entry(review.id).url) {
+                Task { await env.social.recordShare(entryID: review.id) }
+            }
+        }
         .toolbar {
             if case .loaded(let review) = item {
                 ToolbarItem(placement: .topBarTrailing) {
-                    ShareLink(item: DeepLink.entry(review.id).url,
-                              message: Text("\(review.author.displayName) on \(review.wine.displayName)")) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .accessibilityLabel("Share tasting")
+                    Button { sharingItem = review } label: { Image(systemName: "square.and.arrow.up") }
+                        .accessibilityLabel("Share tasting")
                 }
                 if review.author.id == env.currentUser?.id {
                     ToolbarItem(placement: .topBarTrailing) {

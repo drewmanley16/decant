@@ -590,7 +590,8 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
             let data = try await client.from("profiles").select()
                 .or("username.ilike.%\(trimmed)%,display_name.ilike.%\(trimmed)%").limit(30).execute().data
             let viewer = try? await me()
-            return try decode([ProfileRow].self, data).map(\.profile).filter { $0.id != viewer }
+            // Accounts that never redeemed an invite aren't really on Decant yet.
+            return try decode([ProfileRow].self, data).map(\.profile).filter { $0.id != viewer && $0.memberSince != nil }
         }
     }
 
@@ -599,6 +600,7 @@ final class SupabaseBackend: AuthService, WineCatalogService, TastingService, So
         return try await run {
             let following = Set(try await followingIDs(of: viewer))
             let data = try await client.from("profiles").select().eq("is_private", value: false)
+                .not("member_since", operator: .is, value: "null")
                 .order("created_at", ascending: false).limit(limit + following.count + 1).execute().data
             return try decode([ProfileRow].self, data).map(\.profile)
                 .filter { $0.id != viewer && !following.contains($0.id) }.prefix(limit).map { $0 }
