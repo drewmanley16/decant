@@ -13,6 +13,8 @@ struct ShareCardView: View {
     var review: String?
     var author: Profile?
     var labelImage: UIImage?
+    /// Studio render of the bottle (same as the cellar shelves); falls back to the flat illustration.
+    var bottleImage: UIImage?
 
     var body: some View {
         ZStack {
@@ -32,14 +34,25 @@ struct ShareCardView: View {
 
                 Spacer()
 
-                BottleArtView(wine: wine, height: 640)
-                    .shadow(color: .black.opacity(0.5), radius: 40, y: 30)
+                Group {
+                    if let bottleImage {
+                        Image(uiImage: bottleImage)
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: 780 * BottleStudio.canvasAspect, height: 780)
+                    } else {
+                        BottleArtView(wine: wine, height: 640)
+                    }
+                }
+                .shadow(color: .black.opacity(0.5), radius: 40, y: 30)
 
                 VStack(spacing: 14) {
-                    Text(wine.vintageLabel)
-                        .font(.system(size: 30, weight: .semibold))
-                        .tracking(6)
-                        .foregroundStyle(Color(red: 0.83, green: 0.7, blue: 0.48))
+                    if wine.isAnyVintage != true {
+                        Text(wine.vintageLabel)
+                            .font(.system(size: 30, weight: .semibold))
+                            .tracking(6)
+                            .foregroundStyle(Color(red: 0.83, green: 0.7, blue: 0.48))
+                    }
                     Text(wine.name)
                         .font(.system(size: 64, weight: .semibold, design: .serif))
                         .multilineTextAlignment(.center)
@@ -85,7 +98,8 @@ struct ShareCardView: View {
 enum ShareCardRenderer {
     static func render(wine: Wine, rating: Double?, review: String? = nil, author: Profile?) async -> UIImage {
         if let path = wine.labelImagePath { _ = await ImageLoader.shared.image(for: path, maxPixel: 600) }
-        let renderer = ImageRenderer(content: ShareCardView(wine: wine, rating: rating, review: review, author: author))
+        let bottle = await BottleStudio.shared.thumbnail(for: wine)
+        let renderer = ImageRenderer(content: ShareCardView(wine: wine, rating: rating, review: review, author: author, bottleImage: bottle))
         renderer.scale = 1
         renderer.proposedSize = ProposedViewSize(width: 1080, height: 1920)
         return renderer.uiImage ?? LabelArtRenderer.image(for: wine)

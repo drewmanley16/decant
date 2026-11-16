@@ -151,6 +151,22 @@ final class AppEnvironment {
         if granted { UIApplication.shared.registerForRemoteNotifications() }
     }
 
+    private static let pushPrimerDeclinedKey = "pushPrimerDeclinedAt"
+
+    /// Whether to show the in-app explanation before the system prompt: only while iOS
+    /// hasn't asked yet, and not within two weeks of the person choosing "Not now".
+    func shouldOfferPush() async -> Bool {
+        guard mode == .supabase else { return false }
+        let declinedAt = UserDefaults.standard.double(forKey: Self.pushPrimerDeclinedKey)
+        if declinedAt > 0, Date().timeIntervalSince1970 - declinedAt < 14 * 24 * 3600 { return false }
+        return await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined
+    }
+
+    func declinePushPrimer() {
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.pushPrimerDeclinedKey)
+        Telemetry.track("push_primer", ["choice": "later"])
+    }
+
     func registerForPushIfAllowed() async {
         guard mode == .supabase, currentUser != nil else { return }
         switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
@@ -183,7 +199,8 @@ final class AppEnvironment {
         Telemetry.track("onboarding_done")
         onboardingComplete = true
         withAnimation(.smooth) { phase = .ready }
-        Task { await requestPushPermission() }
+        // Push permission is offered after the first tasting (see `shouldOfferPush`),
+        // when there's something to be notified about. Asking at sign-up wastes the one prompt.
     }
 
     func signOut() async {

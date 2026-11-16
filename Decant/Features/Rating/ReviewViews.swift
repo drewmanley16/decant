@@ -41,7 +41,7 @@ struct ReviewCard: View {
             if showsWine {
                 NavigationLink(value: Route.wine(item.wine)) {
                     HStack(spacing: 14) {
-                        BottleArtView(wine: item.wine, height: 92)
+                        BottleRender(wine: item.wine, height: 100)
                             .frame(width: 44)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(item.wine.name).font(.system(.headline, design: .serif)).foregroundStyle(Palette.charcoal)

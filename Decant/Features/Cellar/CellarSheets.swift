@@ -145,7 +145,7 @@ struct BottleManageSheet: View {
             List {
                 Section {
                     HStack(spacing: 16) {
-                        BottleArtView(wine: bottle.wine, height: 110)
+                        BottleRender(wine: bottle.wine, height: 120)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(bottle.wine.vintageLabel).eyebrow()
                             Text(bottle.wine.name).font(Typo.title3)

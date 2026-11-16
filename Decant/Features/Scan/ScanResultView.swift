@@ -135,7 +135,7 @@ private struct MatchCard: View {
     var body: some View {
         VStack(spacing: 16) {
             BottleStage(tint: Palette.wineColor(candidate.wine.type)) {
-                BottleArtView(wine: candidate.wine, height: 200)
+                BottleRender(wine: candidate.wine, height: 220)
             }
             .frame(height: 230)
             VStack(spacing: 4) {

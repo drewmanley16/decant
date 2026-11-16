@@ -210,7 +210,7 @@ private struct CellarHistoryGrid: View {
                         NavigationLink(value: Route.wine(item.wine)) {
                             VStack(spacing: 6) {
                                 ZStack(alignment: .topTrailing) {
-                                    BottleArtView(wine: item.wine, height: 120)
+                                    BottleRender(wine: item.wine, height: 130)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 10)
                                         .background(Palette.creamElevated, in: RoundedRectangle(cornerRadius: 18, style: .continuous))

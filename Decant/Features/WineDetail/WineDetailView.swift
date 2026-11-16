@@ -60,7 +60,7 @@ private struct WineDetailContent: View {
             }
             .padding(.bottom, 40)
         }
-        .navigationTitle(wine.vintageLabel)
+        .navigationTitle(wine.isAnyVintage == true ? "" : wine.vintageLabel)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

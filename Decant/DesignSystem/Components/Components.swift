@@ -28,7 +28,7 @@ struct WineCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             BottleStage(tint: Palette.wineColor(wine.type)) {
-                BottleArtView(wine: wine, height: 130)
+                BottleRender(wine: wine, height: 140)
             }
             .frame(height: 150)
             .frame(maxWidth: .infinity)

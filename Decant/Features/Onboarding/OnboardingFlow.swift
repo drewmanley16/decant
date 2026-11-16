@@ -337,8 +337,13 @@ private struct CheckboxToggleStyle: ToggleStyle {
                     .font(.title3)
                     .contentTransition(.symbolEffect(.replace))
                     .foregroundStyle(configuration.isOn ? Palette.burgundy : Palette.secondaryText)
+                    // 44pt hit area; the box alone was ~24pt and easy to miss.
+                    .frame(width: 44, height: 44, alignment: .topLeading)
+                    .padding(.top, -10)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .padding(.trailing, -18)
             .accessibilityLabel("Agree to terms")
             .accessibilityValue(configuration.isOn ? "Checked" : "Unchecked")
             configuration.label

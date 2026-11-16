@@ -6,6 +6,8 @@ final class DiscoverViewModel {
     var sections: Loadable<[DiscoverSection]> = .idle
     var feed: Loadable<[FeedItem]> = .idle
     var recentlyViewed: [Wine] = []
+    /// nil until loaded, so the first-log card doesn't flash for people who have tastings.
+    var myTastingCount: Int?
     var unreadNotifications = 0
     var isLoadingMore = false
     private var reachedEnd = false
@@ -29,6 +31,7 @@ final class DiscoverViewModel {
             async let mineTask: [ReviewItem]? = me != nil ? try? env.tastings.entries(forUser: me!) : nil
             let (catalog, feedItems) = try await (catalogTask, feedTask)
             let mine = await mineTask ?? []
+            myTastingCount = mine.count
             let friendActivity = feedItems.compactMap { item -> ReviewItem? in
                 guard item.actor.id != me, let wine = item.wine, let entry = item.entry else { return nil }
                 return ReviewItem(entry: entry, author: item.actor, wine: wine)
@@ -116,6 +119,7 @@ private struct DiscoverContent: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 28) {
+            if model.myTastingCount == 0 { FirstLogCard() }
             switch model.sections {
             case .loaded(let sections):
                 ForEach(Array(sections.enumerated()), id: \.element.id) { index, section in
@@ -280,7 +284,7 @@ private struct FeaturedWineCard: View {
             : AnyLayout(HStackLayout(spacing: 18))
         layout {
             BottleStage(tint: Palette.wineColor(wine.type)) {
-                BottleArtView(wine: wine, height: 190)
+                BottleRender(wine: wine, height: 205)
             }
             .frame(width: isLarge ? nil : 120, height: 220)
             .frame(maxWidth: isLarge ? .infinity : nil)
@@ -387,7 +391,7 @@ private struct RegionCard: View {
             LinearGradient(colors: [Palette.wineColor(wine.type).opacity(0.85), Palette.wineColor(wine.type).opacity(0.55)],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
             LinearGradient(colors: [.black.opacity(0.35), .clear], startPoint: .bottom, endPoint: .center)
-            BottleArtView(wine: wine, height: 150)
+            BottleRender(wine: wine, height: 165)
                 .rotationEffect(.degrees(8))
                 .offset(x: -14, y: 26)
             VStack(alignment: .leading, spacing: 4) {
@@ -413,5 +417,53 @@ private struct RegionCard: View {
         .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Shown on Discover until the first tasting is saved: logging one wine is what
+/// turns a sign-up into someone who comes back.
+private struct FirstLogCard: View {
+    @Environment(AppEnvironment.self) private var env
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Start your diary").eyebrow()
+            Text("What was the last wine you loved?")
+                .font(Typo.title2)
+                .foregroundStyle(Palette.charcoal)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Log it in a few taps. Every bottle you rate sharpens your recommendations.")
+                .font(.callout)
+                .foregroundStyle(Palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { scanButton; searchButton }
+                VStack(spacing: 10) { scanButton; searchButton }
+            }
+            .padding(.top, 4)
+        }
+        .cardSurface(padding: 20)
+        .padding(.horizontal, Metrics.gutter)
+        .onAppear { Telemetry.track("first_log_card", ["action": "shown"]) }
+    }
+
+    private var scanButton: some View {
+        Button {
+            Telemetry.track("first_log_card", ["action": "scan"])
+            env.isScannerPresented = true
+        } label: {
+            Label("Scan a label", systemImage: "viewfinder")
+        }
+        .buttonStyle(.primary)
+    }
+
+    private var searchButton: some View {
+        Button {
+            Telemetry.track("first_log_card", ["action": "search"])
+            env.selectedTab = .search
+        } label: {
+            Label("Search", systemImage: "magnifyingglass")
+        }
+        .buttonStyle(.secondary)
     }
 }

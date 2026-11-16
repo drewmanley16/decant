@@ -44,6 +44,7 @@ private struct QuickLogFlow: View {
     @State private var didSave = false
     @State private var error: String?
     @State private var savedEntry: TastingEntry?
+    @State private var showPushPrimer = false
     @State private var confirmsDiscard = false
     @State private var autoAdvance: Task<Void, Never>?
     @FocusState private var typing: Bool
@@ -86,8 +87,11 @@ private struct QuickLogFlow: View {
             original = draft
             if let me = env.currentUser { friends = (try? await env.social.following(of: me.id)) ?? [] }
         }
-        .sheet(item: $savedEntry, onDismiss: { dismiss() }) { entry in
+        .sheet(item: $savedEntry, onDismiss: { Task { await finish() } }) { entry in
             ShareWineSheet(wine: wine, rating: entry.rating, review: entry.review)
+        }
+        .sheet(isPresented: $showPushPrimer, onDismiss: { dismiss() }) {
+            PushPrimerSheet()
         }
         .sensoryFeedback(.impact(weight: .light), trigger: step)
         .sensoryFeedback(.success, trigger: savedEntry != nil)
@@ -196,7 +200,7 @@ private struct QuickLogFlow: View {
     private var ratingPage: some View {
         VStack(spacing: 22) {
             Spacer(minLength: 0)
-            BottleArtView(wine: wine, height: 150)
+            BottleRender(wine: wine, height: 170)
             VStack(spacing: 4) {
                 Text(wine.name)
                     .font(.system(.title2, design: .serif).weight(.semibold))
@@ -430,6 +434,11 @@ private struct QuickLogFlow: View {
         return draft.rating != nil || draft.review.nilIfBlank != nil || draft.personalNotes.nilIfBlank != nil
     }
 
+    /// Closes the flow, first offering notifications if the person hasn't been asked yet.
+    private func finish() async {
+        if await env.shouldOfferPush() { showPushPrimer = true } else { dismiss() }
+    }
+
     private func save() async {
         guard canSave else { return }
         autoAdvance?.cancel()
@@ -458,7 +467,7 @@ private struct QuickLogFlow: View {
             if entry.rating != nil {
                 savedEntry = entry // offer to share
             } else {
-                dismiss()
+                await finish()
             }
         } catch {
             self.error = error.localizedDescription
@@ -815,5 +824,48 @@ private struct FriendTagPicker: View {
             .accessibilityAddTraits(selection.contains(friend.id) ? .isSelected : [])
         }
         .navigationTitle("Tag friends")
+    }
+}
+
+/// Explains what notifications are for before iOS asks, so the one system prompt isn't wasted.
+private struct PushPrimerSheet: View {
+    @Environment(AppEnvironment.self) private var env
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "bell.badge.fill")
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(Palette.burgundy, Palette.burgundy.opacity(0.85))
+                .font(.system(size: 40))
+                .frame(width: 88, height: 88)
+                .background(Palette.burgundy.opacity(0.08), in: Circle())
+                .padding(.top, 28)
+            Text("Know when friends raise a glass")
+                .font(Typo.title2)
+                .multilineTextAlignment(.center)
+            Text("Get a nudge when someone likes or comments on your tastings, or starts following you.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.secondaryText)
+            Spacer(minLength: 8)
+            Button("Turn on notifications") {
+                Telemetry.track("push_primer", ["choice": "allow"])
+                Task {
+                    await env.requestPushPermission()
+                    dismiss()
+                }
+            }
+            .buttonStyle(.primary)
+            Button("Not now") {
+                env.declinePushPrimer()
+                dismiss()
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.bottom, 8)
+        }
+        .padding(.horizontal, 28)
+        .presentationDetents([.medium])
+        .presentationBackground(Palette.cream)
+        .onAppear { Telemetry.track("push_primer", ["choice": "shown"]) }
     }
 }
