@@ -9,6 +9,8 @@ final class DiscoverViewModel {
     /// nil until loaded, so the first-log card doesn't flash for people who have tastings.
     var myTastingCount: Int?
     var unreadNotifications = 0
+    /// Wines on your wishlist, so feed cards can show "want to try" as saved.
+    var wishlistIDs: Set<UUID> = []
     var isLoadingMore = false
     private var reachedEnd = false
     private let env: AppEnvironment
@@ -26,6 +28,7 @@ final class DiscoverViewModel {
             async let feedTask = env.social.feed(before: nil, limit: 30)
             async let recentTask = try? env.catalog.recentlyViewed(limit: 10)
             async let notificationsTask = try? env.social.notifications()
+            async let wishlistTask = try? env.cellar.wishlist()
             let me = env.currentUser?.id
             // Fetched alongside the rest instead of after it.
             async let mineTask: [ReviewItem]? = me != nil ? try? env.tastings.entries(forUser: me!) : nil
@@ -41,9 +44,24 @@ final class DiscoverViewModel {
             feed = .loaded(feedItems)
             recentlyViewed = await recentTask ?? []
             unreadNotifications = (await notificationsTask ?? []).filter { !$0.isRead }.count
+            if let saved = await wishlistTask { wishlistIDs = Set(saved.map(\.wine.id)) }
         } catch {
             sections.fail(error)
             feed.fail(error)
+        }
+    }
+
+    /// Saves or removes a friend's wine from your wishlist, updating the card immediately.
+    func toggleWishlist(_ wine: Wine) async {
+        let target = !wishlistIDs.contains(wine.id)
+        if target { wishlistIDs.insert(wine.id) } else { wishlistIDs.remove(wine.id) }
+        do {
+            try await env.cellar.setWishlisted(target, wineID: wine.id)
+            env.show(target ? "Saved to Wishlist" : "Removed from Wishlist", symbol: target ? "bookmark.fill" : "bookmark")
+            Telemetry.track("feed_wishlist", ["action": target ? "add" : "remove"])
+        } catch {
+            if target { wishlistIDs.remove(wine.id) } else { wishlistIDs.insert(wine.id) }
+            env.show(error.localizedDescription, symbol: "exclamationmark.triangle.fill")
         }
     }
 
@@ -174,7 +192,12 @@ private struct DiscoverContent: View {
             case .loaded(let all):
                 let items = friendItems(all)
                 ForEach(items) { item in
-                    FeedCard(item: item, onLike: { Task { await model.toggleLike(item) } })
+                    FeedCard(item: item,
+                             wishlist: item.wine.flatMap { wine in
+                                 item.actor.id == env.currentUser?.id ? nil
+                                     : WishlistToggle(isOn: model.wishlistIDs.contains(wine.id)) { Task { await model.toggleWishlist(wine) } }
+                             },
+                             onLike: { Task { await model.toggleLike(item) } })
                         .onAppear { if item.id == items.last?.id { Task { await model.loadMore() } } }
                 }
                 if model.isLoadingMore { ProgressView().frame(maxWidth: .infinity) }
@@ -218,11 +241,12 @@ struct WineCarousel: View {
 /// "Alex rated Château Margaux 2015 ★★★★★"
 struct FeedCard: View {
     var item: FeedItem
+    var wishlist: WishlistToggle? = nil
     var onLike: () -> Void
 
     var body: some View {
         if let wine = item.wine, let entry = item.entry, item.kind == .rated {
-            ReviewCard(item: ReviewItem(entry: entry, author: item.actor, wine: wine), onLike: onLike)
+            ReviewCard(item: ReviewItem(entry: entry, author: item.actor, wine: wine), wishlist: wishlist, onLike: onLike)
                 .accessibilityLabel("\(item.actor.displayName) rated \(wine.displayName)")
         } else if let wine = item.wine {
             NavigationLink(value: Route.wine(wine)) {

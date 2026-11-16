@@ -1,11 +1,19 @@
 import SwiftUI
 
+/// Whether a wine is on your wishlist, and how to flip it.
+struct WishlistToggle {
+    var isOn: Bool
+    var toggle: () -> Void
+}
+
 /// A review / tasting entry card used in feeds and on wine pages.
 struct ReviewCard: View {
     var item: ReviewItem
     var showsWine = true
     /// Feed cards show the newest comments; the thread view lists them all instead.
     var showsCommentPreview = true
+    /// Feed cards offer a one-tap "want to try"; nil hides it (e.g. on the wine's own page).
+    var wishlist: WishlistToggle? = nil
     var onLike: () -> Void
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -153,6 +161,17 @@ struct ReviewCard: View {
             Spacer()
             if let location = item.entry.location {
                 Label(location, systemImage: "mappin").font(.caption).foregroundStyle(Palette.secondaryText).lineLimit(1)
+            }
+            if let wishlist {
+                Button(action: wishlist.toggle) {
+                    Image(systemName: wishlist.isOn ? "bookmark.fill" : "bookmark")
+                        .foregroundStyle(wishlist.isOn ? Palette.burgundy : Palette.secondaryText)
+                        .symbolEffect(.bounce, value: wishlist.isOn)
+                        .frame(minWidth: 28, minHeight: 28)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(wishlist.isOn ? "Remove \(item.wine.displayName) from wishlist" : "Want to try \(item.wine.displayName)")
+                .sensoryFeedback(.impact(weight: .light), trigger: wishlist.isOn)
             }
         }
         .font(.subheadline.weight(.medium))
